@@ -9,9 +9,10 @@ const PORT = config.PORT;
 const startServer = async () => {
     try {
         await connDB(config.database.MONGO_URI, config.database.DB_NAME);
+        console.log(`Conexión a la base de datos MongoDB establecida con éxito`);
 
         const server = app.listen(PORT, () => {
-            console.log(`Servidor escuchando en el puerto ${server.address().port}`);
+            console.log(`Servidor Express escuchando en el puerto ${server.address().port}`);
         });
     } catch (error) {
         console.error('Error al iniciar el servidor:', error);

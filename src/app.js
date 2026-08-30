@@ -1,6 +1,6 @@
 import express from 'express';
 // lo importo con alias porque seguro tendré varios routers en mi app
-import { router as productsRouter } from './routes/productsRouter.js';
+import { router as eventsRouter } from './routes/events.router.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { logger } from './middlewares/log.js';
 
@@ -11,17 +11,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 //rutas
-app.use('/api/products', productsRouter);
+app.use('/api/events', eventsRouter);
 
 //endpoints
 //-home
 app.get('/', (req, res) => {
     res.setHeader('Content-type', 'text/html');
-    res.status(200).send('<h1>Bienvenido a mi servidor express</h1>');
+    res.status(200).send('<h1>Bienvenido a mi app de Venta de Tickets para eventos.</h1>');
 });
 
 //-health
-app.get('/health', logger, (req, res) => {
+app.get('/api/health', logger, (req, res) => {
     if (req.query.error) {
         throw new Error("Error de pruebas!");
     }

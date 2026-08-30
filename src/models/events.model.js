@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
+import { EVENT_STATUS, VALID_EVENT_STATUSES } from '../constants/events.js'
 
-const productsSchema = new mongoose.Schema(
+const eventSchema = new mongoose.Schema(
     // el schema tiene 2 argumentos q se configuran como 2 obj:
     {//en el 1er arg defino las propiedades de mi elemento
         code: {
@@ -19,7 +20,24 @@ const productsSchema = new mongoose.Schema(
         },
         description: {
             type: String,
+            required: [true, "La descripción es obligatoria"],
             minLength: [10, "La cantidad min de caracteres es 10. Ud ingresó {VALUE}"],
+            trim: true
+        },
+        date: {
+            type: Date,
+            validate: {
+                // Valida que la fecha del evento no sea en el pasado
+                validator: function (value) {
+                    return value > new Date();
+                },
+                message: 'La fecha del evento debe ser posterior a la fecha actual.',
+            },
+        },
+        location: {
+            type: String,
+            required: [true, "La ubicación es obligatoria"],
+            minLength: [10, "La cantidad min de caracteres es de 10. Ustes ingresó {VALUE}"],
             trim: true
         },
         category: {
@@ -27,8 +45,10 @@ const productsSchema = new mongoose.Schema(
             required: [true, "La categoría es obligatoria"],
             trim: true
         },
-        color: {
+        artist: {
             type: String,
+            required: [true, "El artista es obligatorio"],
+            minLength: [2, "La cantidad min de caracteres es de 2. Ustes ingresó {VALUE}"],
             trim: true
         },
         thumbnail: {
@@ -41,10 +61,10 @@ const productsSchema = new mongoose.Schema(
             required: [true, "El precio es obligatorio"],
             min: [0, "El precio debe ser un numero positivo mayor o igual a cero, Usted ingresó {VALUE}"],
         },
-        stock: {
+        totalTickets: {
             type: Number,
-            required: [true, "El stock es obligatorio."],
-            min: [0, "El stock no puede ser negativo, usted ingresó {VALUE}"],
+            required: [true, "La cantidad de tickets a vender es obligatorio."],
+            min: [0, "La cantidad de tickets no puede ser negativa. Usted ingresó {VALUE}"],
             validate: {
                 //validar que sea un número entero
                 validator: Number.isInteger, //validador de num enteros que trae por defecto Mongoose, así como este hay muchos otros validadores que trae x default...
@@ -56,9 +76,15 @@ const productsSchema = new mongoose.Schema(
             }
         },
         status: {
-            type: Boolean,
-            default: true,
-        }
+            type: String,
+            // enum restringe los valores permitidos únicamente a esta lista
+            enum: {
+                values: VALID_EVENT_STATUSES, // uso la constante centralizada
+                message: '{VALUE} no es un estado válido',
+            },
+            default: EVENT_STATUS.DRAFT, // Por defecto se crea en borrador
+            lowercase: true,  // Convierte automáticamente el string a minúsculas
+        },
     },
     {
         timestamps: true, // Crea automáticamente createdAt y updatedAt
@@ -67,7 +93,4 @@ const productsSchema = new mongoose.Schema(
     }
 )
 
-export const productModel = mongoose.model(
-    "products",
-    productsSchema
-)
+export const eventModel = mongoose.model('event', eventSchema);
