@@ -1,6 +1,6 @@
 import { sanitizeInput } from "../utils/sanitizer.js";
 import { validateOptionalEventDate } from "../utils/dateValidator.js";
-import { VALID_EVENT_STATUSES } from "../constants/events.js";
+import { VALID_EVENT_STATUSES } from "../constants/events.constants.js";
 
 // creo la clase
 export class EventsController {
@@ -23,7 +23,10 @@ export class EventsController {
             }
             //3. si hay eventos devuelvo la rta exitosa
             res.setHeader('Content-type', 'application/json');
-            res.status(200).json({ message: 'Listado de Eventos', events });
+            res.status(200).json({
+                status: 'success',
+                payload: events
+            });
 
         } catch (error) {
             next(error);
@@ -32,9 +35,23 @@ export class EventsController {
 
     getEventsById = async (req, res, next) => {
         try {
-            const event = `Evento ${req.params.id}`; //capturo el id que me llega por params desde la ruta /api/products/:id para mostrarlo en la rta
+            const { id } = req.params;
+            const event = await this.eventsDAO.getById(id);
+
+            if (!event) {
+                res.setHeader('Content-type', 'application/json');
+                return res.status(404).json({
+                    status: 'error',
+                    message: `No se encontró el evento con id ${id}`
+                });
+            }
+
             res.setHeader('Content-type', 'application/json');
-            res.status(200).json({ event });
+            res.status(200).json({
+                status: 'success',
+                payload: event
+            });
+
         } catch (error) {
             next(error);
         }
@@ -42,6 +59,7 @@ export class EventsController {
 
     createEvent = async (req, res, next) => {
         try {
+            //TODO: mover la validacion a un helper
             //1. desestructuro propiedades para hacer la validacion de c/u, uso LET para poder reasignarles valor luego de la sanitizacion
             let { code, title, description, date, location, category, artist, thumbnail, price, totalTickets, status } = req.body;
 

@@ -44,13 +44,10 @@ export class EventsDAO {
     }
 
     // creamos un evento
+    // acá no hago try/catch para que cuando mangoose lance un error, este pueda ser cazado directamente en el controlador en el catch y la envie al errorHandler con next(error).
     async create(event = {}) {
-        try {
-            const newEvent = await eventModel.create(event);
-            return newEvent.toJSON();
-        } catch (error) {
-            throw error;
-        }
+        const newEvent = await eventModel.create(event);
+        return newEvent.toJSON();
     }
 }
 

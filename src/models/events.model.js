@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { EVENT_STATUS, VALID_EVENT_STATUSES } from '../constants/events.js'
+import { EVENT_STATUS, VALID_EVENT_STATUSES } from '../constants/events.constants.js'
 
 const eventSchema = new mongoose.Schema(
     // el schema tiene 2 argumentos q se configuran como 2 obj:
@@ -93,4 +93,4 @@ const eventSchema = new mongoose.Schema(
     }
 )
 
-export const eventModel = mongoose.model('event', eventSchema);
+export const eventModel = mongoose.model('events', eventSchema);

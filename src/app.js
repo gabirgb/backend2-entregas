@@ -1,6 +1,8 @@
 import express from 'express';
 // lo importo con alias porque seguro tendré varios routers en mi app
 import { router as eventsRouter } from './routes/events.router.js';
+import { router as usersRouter } from './routes/users.router.js';
+import { router as sessionsRouter } from './routes/sessions.router.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { logger } from './middlewares/log.js';
 
@@ -12,6 +14,8 @@ app.use(express.urlencoded({ extended: true }));
 
 //rutas
 app.use('/api/events', eventsRouter);
+app.use('/api/users', usersRouter);
+app.use('/api/sessions', sessionsRouter);
 
 //endpoints
 //-home
