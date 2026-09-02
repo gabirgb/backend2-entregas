@@ -1,8 +1,8 @@
 <h1 align="center">Esto es Eventeala 🎫</h1>
 <h2 align="center">Una API para gestión de eventos orientada a talleres y charlas educativas.</h2>
 
-<h3 align="center">👩🏻‍💻 Información técnica del proyecto</h3>
-<h4>Stack</h4>
+<h3 align="center">Información técnica del proyecto</h3>
+<h4>🧱 Stack</h4>
 Node.js (usando ESM) con las siguientes dependencias:
 <ul>
 <li>Express</li>
@@ -10,7 +10,7 @@ Node.js (usando ESM) con las siguientes dependencias:
 <li>bcrypt</li>
 <li>dotenv</li>
 </ul>
-</br>
+
 <h5>🏢 Arquitectura</h5>
 La API sigue una arquitectura en capas con separación de responsabilidades:
 <ul>
@@ -20,9 +20,7 @@ La API sigue una arquitectura en capas con separación de responsabilidades:
 <li>DAOs: Gestionan el acceso y la persistencia de datos (persistencia desacoplada).</li>
 <li>Modelos: Definen los esquemas y estructuras de los datos.</li>
 </ul>
-</br>
 <h5>🌲 Árbol de directorios</h5>
-</br>
 ├── src/
 │   ├── app.js
 │   ├── server.js
@@ -51,7 +49,7 @@ MONGO_URI: URI de conexión a la base de datos MongoDB ( ej: mongodb://localhost
 DB_NAME: Nombre de la base de datos en MongoDB (ej: "mibase")
 
 </br>
-<h5>🔧 Instalación y Ejecución</h5>
+<h5>👩🏻‍💻 Instalación y Ejecución</h5>
 </br>
 
 <ol>
