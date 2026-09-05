@@ -19,3 +19,5 @@ export const config = {
 
 // para checkear qué vars de entorno estoy viendo:
 //console.log(config)
+
+//TODO: configurar node_env: development

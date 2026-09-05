@@ -24,8 +24,9 @@ const userSchema = new mongoose.Schema(
             type: String,
             required: [true, 'La contraseña es obligatoria']
         },
-        age: {
-            type: Number
+        birth: {
+            type: Number,
+            required: [true, 'La fecha de nacimiento es obligatoria']
         },
         role: {
             type: String,
@@ -47,4 +48,4 @@ const userSchema = new mongoose.Schema(
     }
 )
 
-export const userModel = mongoose.model('users', userSchema);
+export const userModel = mongoose.model('user', userSchema);

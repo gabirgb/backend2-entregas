@@ -1,8 +1,8 @@
-import { isValidPassword, isValidEmail } from "../utils/accountValidator.js";
+import { isValidPassword, isValidEmail, isAdult } from "../utils/accountValidator.js";
 import { VALID_USER_ROLES } from "../constants/users.constants.js";
 
 export const validateCreateUserData = (userData = {}) => {
-    const { first_name, last_name, email, password, age, role } = userData;
+    const { first_name, last_name, email, password, birth, role } = userData;
 
     if (!first_name || typeof first_name !== 'string' || !first_name.trim()) {
         return {
@@ -32,12 +32,10 @@ export const validateCreateUserData = (userData = {}) => {
         }
     }
 
-    if (age !== undefined && age !== null && age !== '') {
-        if (!Number.isInteger(Number(age)) || Number(age) <= 0) {
-            return {
-                isValid: false,
-                error: 'La edad debe ser un número entero mayor a 0'
-            };
+    if (!isAdult(birth)) {
+        return {
+            isValid: false,
+            error: 'El usuario debe ser mayor de edad (18 años o más).'
         }
     }
 
