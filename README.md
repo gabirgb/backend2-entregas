@@ -51,7 +51,7 @@ La API sigue una arquitectura en capas con separación de responsabilidades:
 <h5>👩🏻‍💻 Instalación y Ejecución</h5>
 <ol>
 <li>Clonar el repositorio:</br>
-git clone &lt URL_DE_TU_REPOSITORIO &gt </br>
+<code>git clone &lt URL_DE_TU_REPOSITORIO &gt</code>
 <code>cd &lt nombre-carpeta &gt</code>
 </li>
 <li>Instalar dependencias:</br>
@@ -71,4 +71,7 @@ git clone &lt URL_DE_TU_REPOSITORIO &gt </br>
 <li>GET /api/events → Listado de eventos ({ "status": "success", "payload": [] })</li>
 <li>/api/sessions → Estructura base inicial para autenticación/sesiones.</li>
 </ul>
-- 📫 You can reach me at **gabienelmundo@gmail.com**
+
+<h5>👩🏻‍💻 Sobre mi </h5>
+- Me llamo Gabriela, soy de Argentina y este proyecto corresponde a una práctica para mi curso de Backend II en Coderhouse.
+- 📫 Podés encontrarme en **gabienelmundo@gmail.com**
