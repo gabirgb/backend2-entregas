@@ -1,5 +1,5 @@
 <h1 align="center">Esto es Eventeala 🎫</h1>
-<h2 align="center">Una API para gestión de eventos orientada a talleres y charlas educativas.</h2>
+<h2 align="center">Una API para gestión de eventos (WIP) orientada a talleres y charlas educativas</h2>
 
 <h3 align="center">Información técnica del proyecto</h3>
 <h4>🧱 Stack</h4>
@@ -21,42 +21,54 @@ La API sigue una arquitectura en capas con separación de responsabilidades:
 <li>Modelos: Definen los esquemas y estructuras de los datos.</li>
 </ul>
 <h5>🌲 Árbol de directorios</h5>
-├── src/
-│   ├── app.js
-│   ├── server.js
-│   ├── config/
-│   ├── controllers/
-│   ├── constatnts/
-│   ├── dao/
-│   ├── helpers/
-│   ├── middlewares/
-│   ├── models/
-│   ├── repositories/
-│   ├── routes/
-│   ├── services/
-│   └── utils/
-├── .env.example
-├── .gitignore
-├── package.json
-└── README.md
+├── src/</br>
+│   ├── app.js</br>
+│   ├── server.js</br>
+│   ├── config/</br>
+│   ├── controllers/</br>
+│   ├── constatnts/</br>
+│   ├── dao/</br>
+│   ├── helpers/</br>
+│   ├── middlewares/</br>
+│   ├── models/</br>
+│   ├── repositories/</br>
+│   ├── routes/</br>
+│   ├── services/</br>
+│   └── utils/</br>
+├── .env.example</br>
+├── .gitignore</br>
+├── package.json</br>
+└── README.md</br>
 
-</br>
 <h5>🪸 Variables de entorno</h5>
-</br>
-PORT: Puerto en el que escucha el servidor (ej: 8080)
-NODE_ENV: Entorno de ejecución (development, production)
-MONGO_URI: URI de conexión a la base de datos MongoDB ( ej: mongodb://localhost:27017/eventos )
-DB_NAME: Nombre de la base de datos en MongoDB (ej: "mibase")
+<strong>PORT:</strong> Puerto en el que escucha el servidor (ej: 8080)</br>
+<strong>NODE_ENV:</strong> Entorno de ejecución (development, production)</br>
+<strong>USER_DUMMY:</strong> nombre de usuario dummy en esta primera etapa hasta que comencemos a usar autenticacion de usuarios.</br>
+<strong>SECRET_DUMMY:</strong> password de usuario dummy en esta primera etapa hasta que comencemos a usar autenticacion de usuarios.</br>
+<strong>MONGO_URI:</strong> URI de conexión a la base de datos MongoDB ( ej: mongodb://localhost:27017/eventos )</br>
+<strong>DB_NAME:</strong> Nombre de la base de datos en MongoDB (ej: "mibase")</br>
 
-</br>
 <h5>👩🏻‍💻 Instalación y Ejecución</h5>
-</br>
-
 <ol>
 <li>Clonar el repositorio:</br>
-git clone &gt URL_DE_TU_REPOSITORIO></br>
-cd <nombre-carpeta></br>
+git clone &lt URL_DE_TU_REPOSITORIO &gt </br>
+<code>cd &lt nombre-carpeta &gt</code>
+</li>
+<li>Instalar dependencias:</br>
+<code>npm install</code>
+</li>
+<li>Configurar el entorno:</br>
+<code>cp .env.example .env</code>
+</li>
+<li>Ejecutar en modo desarrollo:</br>
+<code>npm run dev</code>
 </li>
 </ol>
 
+<h5>📍 Rutas Disponibles (Endpoints)</h5>
+<ul>
+<li>GET /api/health → Estado del servidor ({ "status": "ok", "message": "Servidor activo" })</li>
+<li>GET /api/events → Listado de eventos ({ "status": "success", "payload": [] })</li>
+<li>/api/sessions → Estructura base inicial para autenticación/sesiones.</li>
+</ul>
 - 📫 You can reach me at **gabienelmundo@gmail.com**
