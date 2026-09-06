@@ -1,6 +1,7 @@
 // Congelo el objeto (Object.freeze) para evitar que se modifique en ejecución
 export const EVENT_STATUS = Object.freeze({
     DRAFT: 'draft',
+    PRESALE: 'presale',
     PUBLISHED: 'published',
     CANCELLED: 'cancelled',
 })

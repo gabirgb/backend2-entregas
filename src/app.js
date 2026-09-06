@@ -1,5 +1,4 @@
 import express from 'express';
-// lo importo con alias porque seguro tendré varios routers en mi app
 import { router as eventsRouter } from './routes/events.router.js';
 import { router as usersRouter } from './routes/users.router.js';
 import { router as sessionsRouter } from './routes/sessions.router.js';
@@ -8,16 +7,20 @@ import { logger } from './middlewares/log.js';
 
 const app = express();
 
-//middlewares basicos para parsear la request del servidor y handlers de errores
+//MMIDLEWARES BASICOS
+//parsear la request del servidor
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-//rutas
+//ROUTES
+// eventsRouter: getAll, getById, createEvent, updateEvent, deleteEvent
 app.use('/api/events', eventsRouter);
+// usersRouter: getById, getByEmail, createUser
 app.use('/api/users', usersRouter);
+// SessionsRouter: login, logout, getCurrentSession
 app.use('/api/sessions', sessionsRouter);
 
-//endpoints
+// ENDPOINTS BASICOS
 //-home
 app.get('/', (req, res) => {
     res.setHeader('Content-type', 'text/html');
@@ -33,7 +36,8 @@ app.get('/api/health', logger, (req, res) => {
     return res.status(200).json("Test ok!!");
 });
 
-//middleware para manejar errores
+//MMIDLEWARES BASICOS
+// Manejo de errores
 app.use(errorHandler);
 
 export default app;

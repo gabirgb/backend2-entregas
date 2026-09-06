@@ -25,7 +25,7 @@ export class UsersController {
             res.setHeader('Content-type', 'application/json');
             return res.status(200).json({
                 status: 'success',
-                payload: users
+                payload: users //TODO: usar DTO para devolver solo los campos necesarios
             });
 
         } catch (error) {
@@ -49,7 +49,7 @@ export class UsersController {
             res.setHeader('Content-type', 'application/json');
             return res.status(200).json({
                 status: 'success',
-                payload: user
+                payload: user//TODO: usar DTO para devolver solo los campos necesarios
             });
 
         } catch (error) {
@@ -73,7 +73,7 @@ export class UsersController {
             res.setHeader('Content-type', 'application/json');
             return res.status(200).json({
                 status: 'success',
-                payload: user
+                payload: user //TODO: usar DTO para devolver solo los campos necesarios
             });
 
         } catch (error) {
@@ -84,10 +84,10 @@ export class UsersController {
     createUser = async (req, res, next) => {
         try {
             // 1. Ejecuto la validación en el helper userValidator pasando el body de la petición
+            // campos obligatorios, formato de email, largo del password, fecha de nacimiento (edad >=18), rol válido
             const validation = validateCreateUserData(req.body);
 
             // 2. Si hay errores de validación, cortamos el flujo y devolvemos 400
-
             if (!validation.isValid) {
                 res.setHeader('Content-type', 'application/json');
                 return res.status(400).json({
@@ -107,11 +107,13 @@ export class UsersController {
 
             // sanitizo campos de texto
             const userData = {
-                ...req.body,
                 first_name: sanitizeInput(req.body.first_name),
                 last_name: sanitizeInput(req.body.last_name),
                 email: req.body.email.toLowerCase().trim(),
-                password: hashPassword(req.body.password)
+                password: hashPassword(req.body.password),
+                birth: req.body.birth,
+                isActive: req.body.isActive !== undefined ? req.body.isActive : true,
+                //TODO: revisar si el hasheo se hace correctamente
             }
 
             //Cuando termino de sanitizar y validar, encripto el pass para que a continuacion viaje a la BD ya hasheado, y no se almacena en texto plano
@@ -127,11 +129,12 @@ export class UsersController {
             return res.status(201).json({
                 status: 'success',
                 message: 'Usuario creado exitosamente',
-                payload: newUser
+                payload: newUser //TODO: usar DTO para devolver solo los campos necesarios
             });
 
         } catch (error) {
             // Pasa el error directamente al middleware errorHandler
+            //TODO: crear un logger para registrar el error antes de pasarlo al middleware
             next(error);
 
         }

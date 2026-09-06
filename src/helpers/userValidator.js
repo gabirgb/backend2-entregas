@@ -1,10 +1,12 @@
-import { isValidPassword, isValidEmail, isAdult } from "../utils/accountValidator.js";
+import { isValidPassword, isValidEmail } from "../utils/accountValidator.js";
 import { VALID_USER_ROLES } from "../constants/users.constants.js";
+import { validateBirthDate } from "../helpers/dateValidationRules.js";
 
 export const validateCreateUserData = (userData = {}) => {
     const { first_name, last_name, email, password, birth, role } = userData;
 
     if (!first_name || typeof first_name !== 'string' || !first_name.trim()) {
+        console.log('first_name:', first_name);
         return {
             isValid: false,
             error: 'El nombre es obligatorio y debe ser un texto válido'
@@ -32,12 +34,14 @@ export const validateCreateUserData = (userData = {}) => {
         }
     }
 
-    if (!isAdult(birth)) {
+    const birthValidation = validateBirthDate(birth);
+    if (!birthValidation.isValid) {
         return {
             isValid: false,
-            error: 'El usuario debe ser mayor de edad (18 años o más).'
-        }
+            error: birthValidation.error
+        };
     }
+
 
     if (role && !VALID_USER_ROLES.includes(role.toLowerCase())) {
         return {

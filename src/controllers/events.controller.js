@@ -1,5 +1,5 @@
 import { sanitizeInput } from "../utils/sanitizer.js";
-import { validateOptionalEventDate } from "../utils/dateValidator.js";
+import { validateEventHours, validateEventStartDate } from "../helpers/dateValidationRules.js";
 import { VALID_EVENT_STATUSES } from "../constants/events.constants.js";
 
 // creo la clase
@@ -59,10 +59,10 @@ export class EventsController {
 
     createEvent = async (req, res, next) => {
         try {
-            //TODO: mover la validacion a un helper
             //1. desestructuro propiedades para hacer la validacion de c/u, uso LET para poder reasignarles valor luego de la sanitizacion
-            let { code, title, description, date, location, category, artist, thumbnail, price, totalTickets, status } = req.body;
+            let { code, title, description, date, startTime, endTime, location, category, artist, thumbnail, price, totalTickets, status } = req.body;
 
+            //TODO: pasar toda la validacion del evento a un helper eventValidator.js
             // Sanitizo manualmente
             code = sanitizeInput(code);
             title = sanitizeInput(title);
@@ -96,18 +96,41 @@ export class EventsController {
                 });
             }
 
-            //4. Valido que la fecha tenga formato correcto y sea a futuro
-            const { isValid, error } = validateOptionalEventDate(date);
-            if (!isValid) {
-                res.setHeader('Content-Type', 'application/json');
-                return res.status(400).json({ error });
+            // 4. Validar fecha (si viene informada)
+            if (date) {
+                const dateValidation = validateEventStartDate(date);
+                if (!dateValidation.isValid) {
+                    res.setHeader('Content-Type', 'application/json');
+                    return res.status(400).json({ error: dateValidation.error });
+                }
             }
 
+            // 4b. Validar horarios (si vienen informados startTime y/or endTime)
+            if (startTime || endTime) {
+                const hoursValidation = validateEventHours(startTime, endTime);
+                if (!hoursValidation.isValid) {
+                    res.setHeader('Content-Type', 'application/json');
+                    return res.status(400).json({ error: hoursValidation.error });
+                }
+            }
 
             // 5. Crear el evento enviando solo los campos desestructurados y limpios: Al construir EventData explícitamente, evito que el cliente inyecte propiedades no deseadas que vengan en el req.body.
             //Además, creo el date solamente si el usuario asignó fecha al evento
+            // 5. Crear el objeto eventData limpio
             const eventData = {
-                code, title, description, ...(date && { date: new Date(date) }), location, category, artist, thumbnail, price, totalTickets, status
+                code,
+                title,
+                description,
+                ...(date && { date: new Date(date) }),
+                ...(startTime && { startTime }),
+                ...(endTime && { endTime }),
+                location,
+                category,
+                artist,
+                thumbnail,
+                price,
+                totalTickets,
+                status
             };
 
             let newEvent = await this.eventsDAO.create(eventData);

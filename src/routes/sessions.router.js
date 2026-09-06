@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { SessionsController } from "../controllers/sessions.controller.js";
-// import { sessionsController } from "../controllers/index.js";
 import { auth } from "../middlewares/auth.js";
 
 export const router = Router();
@@ -12,5 +11,3 @@ const sessionsController = new SessionsController();
 router.get('/current', sessionsController.getCurrentSession);
 router.post('/login', sessionsController.login);
 router.post('/logout', sessionsController.logout);
-
-export default router;

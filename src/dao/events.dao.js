@@ -8,7 +8,7 @@ export class EventsDAO {
     //recordar pasarle el req.query en el controller al GET porque sino acá llega vacio
     async get(queryOptions = {}) {
         //desestructuro el onjeto donde vienen los posibles parámetros de búsqueda
-        const { code, title, description, location, category, artist, fromDate, toDate, status } = queryOptions;
+        const { title, location, category, artist, fromDate, toDate, status } = queryOptions;
         // creo un objeto vacio donde voy a ir armando la consulta, donde cada propiedad será un parametro de busqueda configurado
         const mongoQuery = {};
 

@@ -40,6 +40,14 @@ const eventSchema = new mongoose.Schema(
             minLength: [10, "La cantidad min de caracteres es de 10. Ustes ingresó {VALUE}"],
             trim: true
         },
+        startTime: {
+            type: String,
+            required: [true, "El horario de inicio es obligatorio"],
+        },
+        endTime: {
+            type: String,
+            required: [true, "El horario de finalización es obligatorio"],
+        },
         category: {
             type: String,
             required: [true, "La categoría es obligatoria"],

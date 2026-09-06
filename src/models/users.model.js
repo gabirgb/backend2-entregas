@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema(
             required: [true, 'La contraseña es obligatoria']
         },
         birth: {
-            type: Number,
+            type: Date,
             required: [true, 'La fecha de nacimiento es obligatoria']
         },
         role: {
