@@ -19,6 +19,7 @@ describe('Pruebas Unitarias para SessionsController', () => {
     beforeEach(() => {
         // 1. Instanciamos un DAO Falso (Mock)
         mockUsersDAO = {
+            //vi: Es el objeto global de Vitest para gestionar Mocks, Espías y Temporizadores. Con vi.fn() creas funciones falsas que recuerdan cuántas veces fueron llamadas y con qué parámetros; con vi.spyOn() intervienes un módulo para cambiar su comportamiento durante el test.
             getByEmail: vi.fn()
         };
 

@@ -33,7 +33,7 @@ app.get('/api/health', requestLogger, (req, res) => {
         throw new Error("Error de pruebas!");
     }
     res.setHeader('Content-Type', 'application/json');
-    return res.status(200).json("Test ok!!");
+    return res.status(200).json("Servidor OK");
 });
 
 //MMIDLEWARES BASICOS

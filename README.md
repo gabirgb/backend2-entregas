@@ -55,7 +55,7 @@ La API sigue una arquitectura en capas con separación de responsabilidades:
 <code>cd &lt nombre-carpeta &gt</code>
 </li>
 <li>Instalar dependencias:</br>
-<code>npm install</code>
+<code>npm install [dependencie]</code>
 </li>
 <li>Configurar el entorno:</br>
 <code>cp .env.example .env</code>
@@ -67,9 +67,22 @@ La API sigue una arquitectura en capas con separación de responsabilidades:
 
 <h5>📍 Rutas Disponibles (Endpoints)</h5>
 <ul>
-<li>GET /api/health → Estado del servidor ({ "status": "ok", "message": "Servidor activo" })</li>
+<li>GET /api/health → Estado del servidor ({ "status": "200", "message": "Servidor OK" })</li>
+</ul>
+<ul>
 <li>GET /api/events → Listado de eventos ({ "status": "success", "payload": [] })</li>
-<li>/api/sessions → Estructura base inicial para autenticación/sesiones.</li>
+<li>GET /api/events/:id → Traigo un evento por ID ({ "status": "success", "payload": [] })</li>
+<li>POST /api/events → Crea un nuevo evento ({ "status": "success", "payload": [] })</li>
+</ul>
+<ul>
+<li>GET /api/users → Listado de eventos ({ "status": "success", "payload": [] })</li>
+<li>GET /api/users/email/:email → Traigo un usuario por email ({ "status": "success", "payload": [] })</li>
+<li>POST /api/users/register → Creo un nuevo usuario ({ "status": "success", "message": "Usuario creado exitosamente", "payload": [] })</li>
+</ul>
+<ul>
+<li>POST /api/sessions/login → Login de usuario ({ "status": "success", "message": "Bienvenido $first_name $last_name", "payload": [] })</li>
+<li>GET /api/sessions/current → Sesión activa ({ "status": "success", "message": "Endpoint de sesión actual (sin lógica de auth aún)", "payload": null })</li>
+<li>POST /api/sessions/logout → Cierra la sesión activa ({ "status": "success", "message": "Endpoint de logout (placeholder)" })</li>
 </ul>
 
 <h5>👩🏻‍💻 Sobre mi </h5>

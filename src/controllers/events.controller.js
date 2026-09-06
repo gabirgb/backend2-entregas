@@ -57,6 +57,8 @@ export class EventsController {
         }
     }
 
+    //TODO: filtrar los eventos por fecha (implementar fromDate y toDate)
+
     createEvent = async (req, res, next) => {
         try {
             //1. desestructuro propiedades para hacer la validacion de c/u, uso LET para poder reasignarles valor luego de la sanitizacion
