@@ -1,11 +1,10 @@
 import { Router } from "express";
-import { SessionsController } from "../controllers/sessions.controller.js";
-import { auth } from "../middlewares/auth.js";
+import { sessionsController } from "../controllers/index.js";
+//import { auth } from "../middlewares/auth.js";
 
 export const router = Router();
-router.use(auth);
+//router.use(auth);
 // Instanciamos el controlador
-const sessionsController = new SessionsController();
 
 // Mapeamos los endpoints iniciales
 router.get('/current', sessionsController.getCurrentSession);

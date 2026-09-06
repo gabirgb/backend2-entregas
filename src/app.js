@@ -3,12 +3,12 @@ import { router as eventsRouter } from './routes/events.router.js';
 import { router as usersRouter } from './routes/users.router.js';
 import { router as sessionsRouter } from './routes/sessions.router.js';
 import { errorHandler } from './middlewares/errorHandler.js';
-import { logger } from './middlewares/log.js';
+import { requestLogger } from './middlewares/log.js';
 
 const app = express();
 
 //MMIDLEWARES BASICOS
-//parsear la request del servidor
+//parsear la request del servidor y logger
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -28,7 +28,7 @@ app.get('/', (req, res) => {
 });
 
 //-health
-app.get('/api/health', logger, (req, res) => {
+app.get('/api/health', requestLogger, (req, res) => {
     if (req.query.error) {
         throw new Error("Error de pruebas!");
     }

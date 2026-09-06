@@ -9,6 +9,6 @@ export const hashPassword = (password) => {
 };
 
 // comparo un pass en texto plano con en hash guardado en db
-export const comparePassword = (password, hashedPasword) => {
-    return bcrypt.compareSync(password, hashPassword);
+export const comparePassword = (password, hashedPassword) => {
+    return bcrypt.compareSync(password, hashedPassword);
 };

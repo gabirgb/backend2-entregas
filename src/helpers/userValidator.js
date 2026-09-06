@@ -6,7 +6,6 @@ export const validateCreateUserData = (userData = {}) => {
     const { first_name, last_name, email, password, birth, role } = userData;
 
     if (!first_name || typeof first_name !== 'string' || !first_name.trim()) {
-        console.log('first_name:', first_name);
         return {
             isValid: false,
             error: 'El nombre es obligatorio y debe ser un texto válido'

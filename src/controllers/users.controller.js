@@ -1,6 +1,7 @@
 import { sanitizeInput } from "../utils/sanitizer.js";
 import { validateCreateUserData } from "../helpers/userValidator.js";
 import { hashPassword } from '../utils/crypto.js'
+import { UsersDTO } from "../dto/users.dto.js";
 
 // creo la clase
 export class UsersController {
@@ -21,11 +22,15 @@ export class UsersController {
                     message: 'No hay usuarios que coincidan con sus criterios de búsqueda'
                 });
             }
+
             //3. si hay usuarios devuelvo la rta exitosa
+            // Mapeamos cada objeto de usuario a su DTO correspondiente
+            const usersDTO = users.map(user => new UsersDTO(user));
+
             res.setHeader('Content-type', 'application/json');
             return res.status(200).json({
                 status: 'success',
-                payload: users //TODO: usar DTO para devolver solo los campos necesarios
+                payload: usersDTO
             });
 
         } catch (error) {
@@ -49,7 +54,7 @@ export class UsersController {
             res.setHeader('Content-type', 'application/json');
             return res.status(200).json({
                 status: 'success',
-                payload: user//TODO: usar DTO para devolver solo los campos necesarios
+                payload: new UsersDTO(user)
             });
 
         } catch (error) {
@@ -73,9 +78,8 @@ export class UsersController {
             res.setHeader('Content-type', 'application/json');
             return res.status(200).json({
                 status: 'success',
-                payload: user //TODO: usar DTO para devolver solo los campos necesarios
+                payload: new UsersDTO(user)
             });
-
         } catch (error) {
             next(error);
         }
@@ -113,7 +117,6 @@ export class UsersController {
                 password: hashPassword(req.body.password),
                 birth: req.body.birth,
                 isActive: req.body.isActive !== undefined ? req.body.isActive : true,
-                //TODO: revisar si el hasheo se hace correctamente
             }
 
             //Cuando termino de sanitizar y validar, encripto el pass para que a continuacion viaje a la BD ya hasheado, y no se almacena en texto plano
@@ -129,7 +132,7 @@ export class UsersController {
             return res.status(201).json({
                 status: 'success',
                 message: 'Usuario creado exitosamente',
-                payload: newUser //TODO: usar DTO para devolver solo los campos necesarios
+                payload: new UsersDTO(newUser) // Devolver solo los campos necesarios usando DTO
             });
 
         } catch (error) {
