@@ -1,21 +1,17 @@
-import { sanitizeInput } from "../utils/sanitizer.js";
-import { validateCreateUserData } from "../helpers/userValidator.js";
-import { hashPassword } from '../utils/crypto.js'
 import { UsersDTO } from "../dto/users.dto.js";
 
-// creo la clase
 export class UsersController {
-    constructor(usersDAO) {
-        this.usersDAO = usersDAO; //el this se refiere al objeto actual.
+    constructor(usersService) {
+        this.usersService = usersService;
     }
 
     getUsers = async (req, res, next) => {
         try {
             // 1. Pedimos los usuarios al DAO pasándole los query params de la URL
-            const users = await this.usersDAO.get(req.query);
+            const users = await this.usersService.getAllUsers(req.query);
 
             //2. evalúo si la busqueda tuvo resultados
-            if (users.length === 0) {
+            if (!users || users.length === 0) {
                 res.setHeader('Content-type', 'application/json');
                 return res.status(404).json({
                     status: 'error',
@@ -41,7 +37,7 @@ export class UsersController {
     getUsersById = async (req, res, next) => {
         try {
             const { id } = req.params;
-            const user = await this.usersDAO.getById(id);
+            const user = await this.usersService.getUsersById(id);
 
             if (!user) {
                 res.setHeader('Content-type', 'application/json');
@@ -65,7 +61,7 @@ export class UsersController {
     getUsersByEmail = async (req, res, next) => {
         try {
             const { email } = req.params;
-            const user = await this.usersDAO.getByEmail(email);
+            const user = await this.usersService.getUsersByEmail(email);
 
             if (!user) {
                 res.setHeader('Content-type', 'application/json');
@@ -87,57 +83,23 @@ export class UsersController {
 
     createUser = async (req, res, next) => {
         try {
-            // 1. Ejecuto la validación en el helper userValidator pasando el body de la petición
-            // campos obligatorios, formato de email, largo del password, fecha de nacimiento (edad >=18), rol válido
-            const validation = validateCreateUserData(req.body);
-
-            // 2. Si hay errores de validación, cortamos el flujo y devolvemos 400
-            if (!validation.isValid) {
-                res.setHeader('Content-type', 'application/json');
-                return res.status(400).json({
-                    status: 'error',
-                    message: validation.error,
-                })
-            }
-            // 3. Verificamos si el email ya existe en la base de datos (Regla de negocio adicional)
-            const existingUser = await this.usersDAO.getByEmail(req.body.email);
-            if (existingUser) {
-                res.setHeader('Content-type', 'application/json');
-                return res.status(409).json({
-                    status: 'error',
-                    message: 'El email ya se encuentra registrado'
-                });
-            }
-
-            // sanitizo campos de texto
-            const userData = {
-                first_name: sanitizeInput(req.body.first_name),
-                last_name: sanitizeInput(req.body.last_name),
-                email: req.body.email.toLowerCase().trim(),
-                password: hashPassword(req.body.password),
-                birth: req.body.birth,
-                isActive: req.body.isActive !== undefined ? req.body.isActive : true,
-            }
-
-            //Cuando termino de sanitizar y validar, encripto el pass para que a continuacion viaje a la BD ya hasheado, y no se almacena en texto plano
-
-            // 4. Si todo está ok, procedemos a crear el usuario en el DAO con la data ya validada y sanitizada
-            const newUser = await this.usersDAO.create(userData);
-
-            // por seguridad elimino el pass en txt plano
-            delete newUser.password;
-
-            // 5. Devolvemos respuesta exitosa 201 Created
+            const newUser = await this.usersService.createUser(req.body);
             res.setHeader('Content-type', 'application/json');
             return res.status(201).json({
                 status: 'success',
                 message: 'Usuario creado exitosamente',
-                payload: new UsersDTO(newUser) // Devolver solo los campos necesarios usando DTO
+                payload: newUser // Devolver solo los campos necesarios usando DTO
             });
 
         } catch (error) {
-            // Pasa el error directamente al middleware errorHandler
-            //TODO: crear un logger para registrar el error antes de pasarlo al middleware
+            // Si el servicio lanzó un error de validacion (statusCode 400)
+            if (error.statusCode) {
+                return res.status(error.statusCode).json({
+                    status: 'error',
+                    message: error.message
+                });
+            }
+            // Si no, paso directamente al middleware errorHandler
             next(error);
 
         }
