@@ -1,3 +1,5 @@
+import { EventsServices } from "../services/events.services.js";
+
 import { EventsController } from "./events.controller.js";
 import { UsersController } from "./users.controller.js";
 import { SessionsController } from "./sessions.controller.js";
@@ -5,10 +7,14 @@ import { SessionsController } from "./sessions.controller.js";
 import { EventsDAO } from "../dao/events.dao.js";
 import { UsersDAO } from "../dao/users.dao.js";
 
+// instancio los DAO
 export const eventsDAO = new EventsDAO();
 export const usersDAO = new UsersDAO();
 
-export const eventsController = new EventsController(eventsDAO);
-export const usersController = new UsersController(usersDAO);
+// instancio los servicios
+export const eventsService = new EventsServices(eventsDAO);
 
+// instancio los controladores
+export const eventsController = new EventsController(eventsService);
+export const usersController = new UsersController(usersDAO);
 export const sessionsController = new SessionsController(usersDAO);
