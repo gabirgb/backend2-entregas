@@ -1,6 +1,6 @@
 // Congelo el objeto (Object.freeze) para evitar que se modifique en ejecución
 export const USER_ROLE = Object.freeze({
-    CUSTOMER: 'customer',
+    USER: 'user',
     ORGANIZER: 'organizer',
     ADMIN: 'admin',
 })

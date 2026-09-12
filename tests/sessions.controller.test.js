@@ -1,3 +1,5 @@
+//TODO: actualizar pruebas unitarias para que usen el nuevo servicio de UsersService en lugar del DAO directamente
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { SessionsController } from '../src/controllers/sessions.controller.js';
 import * as cryptoUtils from '../src/utils/crypto.js';

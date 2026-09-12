@@ -30,6 +30,7 @@ export class EventsDAO {
             if (toDate) mongoQuery.date.$lte = new Date(toDate);
         }
 
+        //TODO: implemetar filtros por fechas, location y categoria
         // 3. Filtro opcional por estado
         if (status) {
             mongoQuery.status = status;

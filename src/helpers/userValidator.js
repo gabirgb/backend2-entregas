@@ -15,14 +15,14 @@ export const validateCreateUserData = (userData = {}) => {
     if (!last_name || typeof last_name !== 'string' || !last_name.trim()) {
         return {
             isValid: false,
-            error: 'El apellido es obligatorio y debe ser un texto válido'
+            error: 'El apellido es obligatorio y debe ser un texto válido.'
         };
     }
 
     if (!isValidEmail(email)) {
         return {
             isValid: false,
-            error: 'El formato del email es incorrecto.'
+            error: 'El email es obligatorio y debe tener un formato válido.'
         }
     }
 

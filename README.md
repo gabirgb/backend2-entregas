@@ -66,25 +66,114 @@ La API sigue una arquitectura en capas con separación de responsabilidades:
 </ol>
 
 <h5>📍 Rutas Disponibles (Endpoints)</h5>
+<h6>GET /api/health</h6>
 <ul>
-<li>GET /api/health → Estado del servidor ({ "status": "200", "message": "Servidor OK" })</li>
+<li>Muestra el estado del servidor</li>
+<li>Ejemplo: </li>
+<li>Respuesta esperada: <code>({ "status": "200", "message": "Servidor OK" })</code></li>
 </ul>
+
+<h6>GET /api/events</h6>
 <ul>
-<li>GET /api/events → Listado de eventos ({ "status": "success", "payload": [] })</li>
-<li>GET /api/events/:id → Traigo un evento por ID ({ "status": "success", "payload": [] })</li>
-<li>POST /api/events → Crea un nuevo evento ({ "status": "success", "payload": [] })</li>
+<li>Muestra el listado completo de eventos</li>
+<li>Ejemplo:</li>
+<li>Respuesta esperada: <code>({ "status": "success", "payload": [] })</code></li>
 </ul>
+
+<h6>GET /api/events/:id</h6>
 <ul>
-<li>GET /api/users → Listado de eventos ({ "status": "success", "payload": [] })</li>
-<li>GET /api/users/email/:email → Traigo un usuario por email ({ "status": "success", "payload": [] })</li>
-<li>POST /api/users/register → Creo un nuevo usuario ({ "status": "success", "message": "Usuario creado exitosamente", "payload": [] })</li>
+<li>Trae un evento filtrado por su id de MongoDB</li>
+<li>Ejemplo:</li>
+<li>Respuesta esperada: <code>({ "status": "success", "payload": [] })</code></li>
 </ul>
+
+<h6>POST /api/events</h6>
 <ul>
-<li>POST /api/sessions/login → Login de usuario ({ "status": "success", "message": "Bienvenido $first_name $last_name", "payload": [] })</li>
-<li>GET /api/sessions/current → Sesión activa ({ "status": "success", "message": "Endpoint de sesión actual (sin lógica de auth aún)", "payload": null })</li>
-<li>POST /api/sessions/logout → Cierra la sesión activa ({ "status": "success", "message": "Endpoint de logout (placeholder)" })</li>
+<li>Crea un nuevo evento</li>
+<li>Ejemplo: http://localhost:3500/api/events</li>
+<li>Datos: {
+    "code": "",
+"title": "",
+"description": "",
+"location": "",
+"category": "",
+"artist": "",
+"date": "yyyy-mm-ddThh:mm:ssZ",
+"startTime": "hh:mm",
+"endTime": "hh:ss",
+"price": ,
+"totalTickets": ,
+}</li>
+<li>Respuesta esperada: <code>({ "status": "success", "payload": [] })</code></li>
+</ul>
+
+<h6>GET /api/users</h6>
+<ul>
+<li>Muestra el listado completo de usuarios</li>
+<li>Ejemplo: </li>
+<li>Respuesta esperada: <code>({ "status": "success", "payload": [] })</code></li>
+</ul>
+
+<h6>GET /api/users/email/:email</h6>
+<ul>
+<li>Filtra un usuario por su email</li>
+<li>Ejemplo: http://localhost:3000/api/users/email/jorge@gmail.com</li>
+<li>Respuesta esperada: <code>({ "status": "success", "payload": [] })</code></li>
+</ul>
+
+<h6>GET /api/users/email/:id</h6>
+<ul>
+<li>Filtra un usuario por su id de MongoDB</li>
+<li>Ejemplo: http://localhost:3000/api/users/6a9c22222222274084b56a4</li>
+<li>Respuesta esperada: <code>({ "status": "success", "payload": [] })</code></li>
+</ul>
+
+<h6>POST /api/users/register</h6>
+<ul>
+<li>Crea un nuevo usuario</li>
+<li>Ejemplo: http://localhost:3000/api/users/register</li>
+<li>Datos: {
+    "first_name": "",
+    "last_name": "",
+    "email": "",
+    "birth": "yyyy-mm-dd",
+    "password": "12345678"
+}</li>
+<li>Respuesta esperada: <code>({ "status": "success", "message": "Usuario creado exitosamente", "payload": [] })</code></li>
+</ul>
+
+<h6>POST /api/sessions/login</h6>
+<ul>
+<li>Login de usuario</li>
+<li>Ejemplo: http://localhost:3000/api/sessions/login</li>
+<li>Datos: {
+    "email": "",
+    "password": ""
+}</li>
+<li>Respuesta esperada <code>({ "status": "success", "message": "Bienvenido $first_name $last_name", "payload": [] })</code></li>
+</ul>
+
+<ul>
+<h6>GET /api/sessions/current</h6>
+<li>Muestra la sesión activa</li>
+<li>Ejemplo: http://localhost:3000/api/sessions/current</li>
+<li>Respuesta esperada: <code>({ "status": "success", "message": "Detalles de la sesión activa", "payload": [] })</code></li>
+</ul>
+
+<h6>POST /api/sessions/logout</h6>
+<ul>
+<li>Cierra la sesión activa</li>
+<li>Ejemplo: http://localhost:3000/api/sessions/logout</li>
+<li>Respuesta esperada: <code>({ "status": "success", "message": "Gracias por visitarnos." })</code></li>
 </ul>
 
 <h5>👩🏻‍💻 Sobre mi </h5>
 - Me llamo Gabriela, soy de Argentina y este proyecto corresponde a una práctica para mi curso de Backend II en Coderhouse.
 - 📫 Podés encontrarme en **gabienelmundo@gmail.com**
+
+//TODO: actualizar directorio carpetas con tests y aclarar cuales son. actualizar dependencias con espress - sessions
+
+<h2>Screenshots</h2>
+<p align="center">
+  <img src="./assets/screenshot.png" alt="Captura de pantalla MongoDB Compass - Postman" width="500" />
+</p>

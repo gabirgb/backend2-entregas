@@ -8,8 +8,6 @@ export const config = {
     PORT: process.env.PORT,
     general: {
         SECRET: process.env.SECRET,
-        SECRET_DUMMY: process.env.SECRET_DUMMY,
-        USER_DUMMY: process.env.USER_DUMMY,
     },
     database: {
         MONGO_URI: process.env.MONGO_URI,

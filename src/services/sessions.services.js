@@ -2,7 +2,7 @@ import { UsersDTO } from "../dto/users.dto.js";
 import { comparePassword } from "../utils/crypto.js";
 
 // creo la clase
-export class SessionsController {
+export class SessionsServices {
     constructor(usersDAO) {
         //me traigo el usersDAO para poder usarlo en los métodos de la clase 
         this.usersDAO = usersDAO; //el this se refiere al objeto actual.
@@ -11,19 +11,11 @@ export class SessionsController {
     // GET /api/sessions/current (Suele pedirlo el enunciado)
     getCurrentSession = async (req, res, next) => {
         try {
-            if (!req.session.user) {
-                res.setHeader('Content-Type', 'application/json');
-                return res.status(401).json({
-                    status: 'error',
-                    message: 'No hay usa sesion activa'
-                });
-            }
-
             res.setHeader('Content-Type', 'application/json');
             return res.status(200).json({
                 status: 'success',
-                message: 'Detalles de la sesión activa',
-                payload: new UsersDTO(req.session.user)
+                message: 'Endpoint de sesión actual (sin lógica de auth aún)',
+                payload: null
             });
         } catch (error) {
             next(error);
@@ -59,8 +51,6 @@ export class SessionsController {
                 });
             }
 
-            req.session.user = user;
-
             res.setHeader('Content-Type', 'application/json');
             return res.status(200).json({
                 status: 'success',
@@ -75,24 +65,11 @@ export class SessionsController {
     // POST /api/sessions/logout
     logout = async (req, res, next) => {
         try {
-            req.session.destroy((error) => {
-                if (error) {
-                    res.setHeader('Content-Type', 'application/json');
-                    return res.status(500).json({
-                        status: 'error',
-                        message: `No se pudo cerrar sesión.`
-                    });
-                }
-                //limpia la cookie de sesion por defecto
-                res.clearCookie('connect.sid');
-
-                res.setHeader('Content-Type', 'application/json');
-                return res.status(200).json({
-                    status: 'success',
-                    message: 'Gracias por visitarnos.'
-                });
+            res.setHeader('Content-Type', 'application/json');
+            return res.status(200).json({
+                status: 'success',
+                message: 'Endpoint de logout (placeholder)'
             });
-
         } catch (error) {
             next(error);
         }

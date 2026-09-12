@@ -4,6 +4,9 @@ import { router as usersRouter } from './routes/users.router.js';
 import { router as sessionsRouter } from './routes/sessions.router.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { requestLogger } from './middlewares/log.js';
+import sessions from "express-session";
+import { config } from './config/config.js';
+
 
 const app = express();
 
@@ -11,6 +14,13 @@ const app = express();
 //parsear la request del servidor y logger
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+//ISessions
+app.use(sessions({
+    secret: config.general.SECRET,
+    saveUninitialized: false,
+    resave: false
+}))
 
 //ROUTES
 // eventsRouter: getAll, getById, createEvent, updateEvent, deleteEvent

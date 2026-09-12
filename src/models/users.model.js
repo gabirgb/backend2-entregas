@@ -34,7 +34,7 @@ const userSchema = new mongoose.Schema(
                 values: VALID_USER_ROLES,
                 message: '{VALUE} no es un rol válido',
             },
-            default: USER_ROLE.CUSTOMER,
+            default: USER_ROLE.USER,
             lowercase: true,
         },
         isActive: {

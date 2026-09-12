@@ -1,5 +1,3 @@
-import { isISO8601Date } from "./dateValidator.js";
-
 // Validar formato estándar de email (usuario@dominio.com)
 export const isValidEmail = (email) => {
     if (!email || typeof email !== 'string') return false;

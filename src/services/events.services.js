@@ -41,7 +41,7 @@ export class EventsServices {
 
         //3. Valido tipo de datos y errores logicos
         if (typeof price !== 'number' || typeof totalTickets !== 'number' || totalTickets < 0) {
-            const error = new Error('Valores inválidos: El precio y los tickets deben ser números, la fecha debe ser  y los tickets no pueden ser negativos');
+            const error = new Error('Valores inválidos: El precio y los tickets deben ser números. Los tickets no pueden ser negativos');
             error.statusCode = 400;
             throw error;
         }
