@@ -69,28 +69,28 @@ La API sigue una arquitectura en capas con separación de responsabilidades:
 <h6>GET /api/health</h6>
 <ul>
 <li>Muestra el estado del servidor</li>
-<li>Ejemplo: </li>
+<li>Ejemplo: localhost:3000/api/health</li>
 <li>Respuesta esperada: <code>({ "status": "200", "message": "Servidor OK" })</code></li>
 </ul>
 
 <h6>GET /api/events</h6>
 <ul>
 <li>Muestra el listado completo de eventos</li>
-<li>Ejemplo:</li>
+<li>Ejemplo: localhost:3000/api/events</li>
 <li>Respuesta esperada: <code>({ "status": "success", "payload": [] })</code></li>
 </ul>
 
 <h6>GET /api/events/:id</h6>
 <ul>
 <li>Trae un evento filtrado por su id de MongoDB</li>
-<li>Ejemplo:</li>
+<li>Ejemplo: localhost:3000/api/events/6a94c3e06cb44444444447e9</li>
 <li>Respuesta esperada: <code>({ "status": "success", "payload": [] })</code></li>
 </ul>
 
 <h6>POST /api/events</h6>
 <ul>
 <li>Crea un nuevo evento</li>
-<li>Ejemplo: localhost:3500/api/events</li>
+<li>Ejemplo: localhost:3000/api/events</li>
 <li>Datos: {
     "code": "",
 "title": "",
@@ -110,7 +110,7 @@ La API sigue una arquitectura en capas con separación de responsabilidades:
 <h6>GET /api/users</h6>
 <ul>
 <li>Muestra el listado completo de usuarios</li>
-<li>Ejemplo: </li>
+<li>Ejemplo: localhost:3000/api/users</li>
 <li>Respuesta esperada: <code>({ "status": "success", "payload": [] })</code></li>
 </ul>
 
@@ -124,7 +124,7 @@ La API sigue una arquitectura en capas con separación de responsabilidades:
 <h6>GET /api/users/email/:id</h6>
 <ul>
 <li>Filtra un usuario por su id de MongoDB</li>
-<li>Ejemplo: localhost:3000/api/users/6a9c22222222274084b56a4</li>
+<li>Ejemplo: localhost:3000/api/users/6a9c22222222202284b56a4</li>
 <li>Respuesta esperada: <code>({ "status": "success", "payload": [] })</code></li>
 </ul>
 
