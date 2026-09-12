@@ -9,3 +9,9 @@ export const sanitizeInput = (input) => {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#x27;");
 }
+
+// Sanitiza (devuelve String)
+export const sanitizeEmail = (email) => {
+    if (!email || typeof email !== 'string') return '';
+    return email.trim().toLowerCase();
+};

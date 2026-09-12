@@ -90,7 +90,7 @@ La API sigue una arquitectura en capas con separación de responsabilidades:
 <h6>POST /api/events</h6>
 <ul>
 <li>Crea un nuevo evento</li>
-<li>Ejemplo: http://localhost:3500/api/events</li>
+<li>Ejemplo: localhost:3500/api/events</li>
 <li>Datos: {
     "code": "",
 "title": "",
@@ -117,21 +117,21 @@ La API sigue una arquitectura en capas con separación de responsabilidades:
 <h6>GET /api/users/email/:email</h6>
 <ul>
 <li>Filtra un usuario por su email</li>
-<li>Ejemplo: http://localhost:3000/api/users/email/jorge@gmail.com</li>
+<li>Ejemplo: localhost:3000/api/users/email/jorge@gmail.com</li>
 <li>Respuesta esperada: <code>({ "status": "success", "payload": [] })</code></li>
 </ul>
 
 <h6>GET /api/users/email/:id</h6>
 <ul>
 <li>Filtra un usuario por su id de MongoDB</li>
-<li>Ejemplo: http://localhost:3000/api/users/6a9c22222222274084b56a4</li>
+<li>Ejemplo: localhost:3000/api/users/6a9c22222222274084b56a4</li>
 <li>Respuesta esperada: <code>({ "status": "success", "payload": [] })</code></li>
 </ul>
 
 <h6>POST /api/users/register</h6>
 <ul>
 <li>Crea un nuevo usuario</li>
-<li>Ejemplo: http://localhost:3000/api/users/register</li>
+<li>Ejemplo: localhost:3000/api/users/register</li>
 <li>Datos: {
     "first_name": "",
     "last_name": "",
@@ -145,7 +145,7 @@ La API sigue una arquitectura en capas con separación de responsabilidades:
 <h6>POST /api/sessions/login</h6>
 <ul>
 <li>Login de usuario</li>
-<li>Ejemplo: http://localhost:3000/api/sessions/login</li>
+<li>Ejemplo: localhost:3000/api/sessions/login</li>
 <li>Datos: {
     "email": "",
     "password": ""
@@ -156,14 +156,14 @@ La API sigue una arquitectura en capas con separación de responsabilidades:
 <ul>
 <h6>GET /api/sessions/current</h6>
 <li>Muestra la sesión activa</li>
-<li>Ejemplo: http://localhost:3000/api/sessions/current</li>
+<li>Ejemplo: localhost:3000/api/sessions/current</li>
 <li>Respuesta esperada: <code>({ "status": "success", "message": "Detalles de la sesión activa", "payload": [] })</code></li>
 </ul>
 
 <h6>POST /api/sessions/logout</h6>
 <ul>
 <li>Cierra la sesión activa</li>
-<li>Ejemplo: http://localhost:3000/api/sessions/logout</li>
+<li>Ejemplo: localhost:3000/api/sessions/logout</li>
 <li>Respuesta esperada: <code>({ "status": "success", "message": "Gracias por visitarnos." })</code></li>
 </ul>
 
