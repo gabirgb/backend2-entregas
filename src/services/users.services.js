@@ -1,7 +1,7 @@
 import { sanitizeInput } from "../utils/sanitizer.js";
 import { validateCreateUserData } from "../helpers/userValidator.js";
 import { hashPassword } from '../utils/crypto.js'
-import { UsersDTO } from "../dto/Users.dto.js";
+import { UsersDTO } from "../dto/users.dto.js";
 
 // creo la clase
 export class UsersServices {

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Eventeala</title>
+    <!-- CDN de Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts para una tipografía moderna -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <link href="./css/style.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-12 col-sm-10 col-md-8 col-lg-5">
+
+                <div class="card login-card p-4 p-sm-5 my-4">
+                    <div class="card-body">
+
+                        <!-- Encabezado / Branding -->
+                        <div class="text-center mb-4">
+                            <h1 class="brand-title h2 mb-1">Eventeala</h1>
+                            <p class="text-muted small">Tu portal de tickets para talleres y seminarios presenciales</p>
+                        </div>
+
+                        <!-- Div para mensajes de error (oculto por defecto con d-none) -->
+                        <div id="divMensajes" class="alert d-none text-center" role="alert">
+                            Credenciales inválidas.
+                        </div>
+
+                        <!-- Formulario de Inicio de Sesión -->
+                        <form action="#" method="POST" id="loginForm">
+
+                            <!-- Campo Email -->
+                            <div class="mb-3">
+                                <label for="email" class="form-label font-weight-medium">Correo Electrónico</label>
+                                <input type="email" class="form-control" id="email" name="email"
+                                    placeholder="ejemplo@correo.com" required>
+                            </div>
+
+                            <!-- Campo Password -->
+                            <div class="mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label for="password" class="form-label mb-0">Contraseña</label>
+                                    <a href="#" class="text-decoration-none small">¿Olvidaste tu contraseña?</a>
+                                </div>
+                                <input type="password" class="form-control" id="password" name="password"
+                                    placeholder="••••••••" required>
+                            </div>
+
+                            <!-- Botón de Iniciar Sesión -->
+                            <div class="d-grid mb-3">
+                                <button type="submit" class="btn btn-primary" id="btnLogin">Iniciar sesión</button>
+                            </div>
+
+                            <!-- Registro / Enlace opcional -->
+                            <div class="text-center">
+                                <span class="text-muted small">¿No tienes una cuenta?</span>
+                                <a href="#" class="text-decoration-none small font-weight-bold ms-1">Regístrate</a>
+                            </div>
+
+                            <hr>
+                            <button id="btnDatos">Get Data</button>
+
+                        </form>
+                        <pre id="divDatos"></pre>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- CDN de Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="./js/login.js"></script>
+</body>
+
+</html>

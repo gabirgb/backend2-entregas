@@ -1,21 +1,21 @@
 import { UsersDTO } from "../dto/users.dto.js";
 import { comparePassword } from "../utils/crypto.js";
+import jwt from "jsonwebtoken";
+import { config } from "../config/config.js"
 
-// creo la clase
 export class SessionsController {
     constructor(usersDAO) {
-        //me traigo el usersDAO para poder usarlo en los métodos de la clase 
-        this.usersDAO = usersDAO; //el this se refiere al objeto actual.
+        this.usersDAO = usersDAO;
     }
 
     // GET /api/sessions/current (Suele pedirlo el enunciado)
     getCurrentSession = async (req, res, next) => {
         try {
-            if (!req.session.user) {
+            if (!req.user) {
                 res.setHeader('Content-Type', 'application/json');
                 return res.status(401).json({
                     status: 'error',
-                    message: 'No hay usa sesion activa'
+                    message: 'No hay sesion activa'
                 });
             }
 
@@ -23,7 +23,7 @@ export class SessionsController {
             return res.status(200).json({
                 status: 'success',
                 message: 'Detalles de la sesión activa',
-                payload: new UsersDTO(req.session.user)
+                payload: req.user
             });
         } catch (error) {
             next(error);
@@ -59,13 +59,19 @@ export class SessionsController {
                 });
             }
 
-            req.session.user = user;
+            const userPayload = new UsersDTO(user);
+            const token = jwt.sign(
+                { ...userPayload },
+                config.general.JWT_SECRET,
+                { expiresIn: "24h" }
+            )
 
             res.setHeader('Content-Type', 'application/json');
             return res.status(200).json({
                 status: 'success',
                 message: `Bienvenido ${user.first_name} ${user.last_name}`,
-                payload: new UsersDTO(user) // Devolver solo los campos necesarios usando DTO  
+                payload: userPayload,
+                token
             });
         } catch (error) {
             next(error);
