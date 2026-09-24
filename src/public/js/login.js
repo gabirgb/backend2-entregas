@@ -62,15 +62,9 @@ btnLogin.addEventListener("click", async (e) => {
 
         // si pasa las validaciones procedo a autenticar
         let data = await response.json();
-        console.log("Data: " + data)
-        //guardo el token en localStorage (o en una cookie, q es mejor porque tiene mas seguridad) y muestro el msje en verde
-        localStorage.setItem("token", data.token);
-        console.log(data)
+
         mostrarMensaje(`Login exitoso para ${data.payload.nombre}`, "success");
-        // Opcional: Redireccionar al dashboard/home tras 1.5 segundos
-        /* setTimeout(() => {
-            window.location.href = "/dashboard";
-        }, 1500); */
+
     } catch (error) {
         mostrarMensaje("Error de conexión con el servidorr", "danger");
     }
@@ -81,19 +75,8 @@ btnLogin.addEventListener("click", async (e) => {
 //Pruebas
 btnDatos.addEventListener("click", async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
-    // Validamos que el token exista antes de enviarlo
-    if (!token) {
-        mostrarMensaje("No hay token guardado. Por favor inicia sesión.", "warning");
-        return;
-    }
 
-    //TODO: verificar si viene el token completo porque si hago logout/ no inicie sesion me viene solo la palabra "bearer" y me da error de token mal formado
-    let response = await fetch("/test", {
-        headers: {
-            "authorization": `Bearer ${localStorage.getItem("token")}`
-        }
-    })
+    let response = await fetch("/test");
     let data = await response.json();
 
     divDatos.textContent = JSON.stringify(data, null, 2);
