@@ -1,6 +1,7 @@
+import { config } from "../config/config.js";
 // la idea es que cuando implementemos corretamente el manejo de errores, dependiendo del tipo de error mostremos un msje diferente. Por ahora solo ponemos 1.
 export const errorHandler = (err, req, res, next) => {
-    const isProduction = process.env.NODE_ENV === 'production';
+    const isProduction = config.general.NODE_ENV === 'production';
 
     // 1. Imprimir logs detallados solo en Desarrollo
     if (!isProduction) {

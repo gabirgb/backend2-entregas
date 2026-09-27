@@ -1,7 +1,7 @@
 // middleware super sencillo para crear logs, por lo general todo lo q se trate de seguridad se loggea
 
 export const requestLogger = (req, res, next) => {
-    const isProduction = process.env.NODE_ENV === 'production';
+    const isProduction = config.general.NODE_ENV === 'production';
 
     if (!isProduction) {
         const start = Date.now();

@@ -2,6 +2,11 @@
 import { config } from '../config/config.js';
 
 export const verifySameOrigin = (req, res, next) => {
+    // Permitir Postman / herramientas de desarrollo en entorno local
+    if (config.general.NODE_ENV === 'development' && !req.headers.origin && !req.headers.referer) {
+        return next();
+    }
+
     // 1. Las peticiones de lectura (GET, HEAD, OPTIONS) generalmente no cambian estado,
     //    pero en acciones sensibles (POST/PUT/DELETE) se exige la verificación.
     if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {

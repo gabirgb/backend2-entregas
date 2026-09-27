@@ -1,8 +1,7 @@
-import jwt from "jsonwebtoken"
-import { config } from "../config/config.js";
+import { verifyToken } from '../utils/jwt.js';
 
 export const auth = (req, res, next) => {
-    const token = req.cookies?.cookietoken;
+    const token = req.cookies?.currentUser;
 
     // 1. Verificamos que el token/cookie exista
     if (!token) {
@@ -12,7 +11,7 @@ export const auth = (req, res, next) => {
 
     // 4. Verificamos el token: confirmo q el token sea válido verificándolo contra mi secret
     try {
-        const payload = jwt.verify(token, config.general.JWT_SECRET);
+        const payload = verifyToken(token);
         req.user = payload;
 
     } catch (error) {

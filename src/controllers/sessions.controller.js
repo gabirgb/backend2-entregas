@@ -1,6 +1,6 @@
 import { UsersDTO } from "../dto/users.dto.js";
 import { comparePassword } from "../utils/crypto.js";
-import jwt from "jsonwebtoken";
+import { generateToken } from '../utils/jwt.js';
 import { config } from "../config/config.js"
 
 export class SessionsController {
@@ -33,6 +33,7 @@ export class SessionsController {
     // POST /api/sessions/login
     login = async (req, res, next) => {
         let { email, password } = req.body;
+
         if (!email || !password) {
             res.setHeader('Content-Type', 'application/json');
             return res.status(400).json({
@@ -59,19 +60,17 @@ export class SessionsController {
                 });
             }
 
-            const userPayload = new UsersDTO(user);
+            const userDTO = new UsersDTO(user);
+            const userPayload = { ...userDTO };
 
-            const token = jwt.sign(
-                { ...userPayload },
-                config.general.JWT_SECRET,
-                { expiresIn: "24h" }
-            )
+            const token = generateToken(userPayload);
 
-
-            res.cookie("cookietoken", token, {
+            res.cookie("currentUser", token, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production', // Solo se envía sobre HTTPS
-                sameSite: 'lax' // para protejer contra ataques CSRF
+                secure: config.general.NODE_ENV === 'production', // Solo se envía sobre HTTPS
+                sameSite: 'lax', // para protejer contra ataques CSRF
+                maxAge: 24 * 60 * 60 * 1000, // 86,400,000 ms (24 horas)
+                path: '/'
             })
 
             res.setHeader('Content-Type', 'application/json');
@@ -88,10 +87,11 @@ export class SessionsController {
     // POST /api/sessions/logout
     logout = async (req, res, next) => {
         try {
-            res.clearCookie('cookietoken', {
+            res.clearCookie('currentUser', {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax'
+                secure: config.general.NODE_ENV === 'production',
+                sameSite: 'lax',
+                path: '/'
             });
 
             res.setHeader('Content-Type', 'application/json');
