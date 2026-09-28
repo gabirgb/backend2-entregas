@@ -12,7 +12,6 @@ import { router as sessionsRouter } from './routes/sessions.router.js';
 //middlewares
 import { errorHandler } from './middlewares/errorHandler.js';
 import { requestLogger } from './middlewares/log.js';
-import { auth } from './middlewares/auth.js';
 
 //sesiones
 import cookieParser from 'cookie-parser';

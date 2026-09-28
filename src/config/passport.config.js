@@ -2,7 +2,7 @@ import passport from "passport";
 import passportJWT from "passport-jwt";
 import local from "passport-local";
 import { config } from "./config.js";
-import { usersDAO } from "../controllers/index.js";
+import { usersDAO, usersService } from "../controllers/index.js";
 import { comparePassword } from "../utils/crypto.js";
 
 
@@ -51,6 +51,24 @@ export const inicializarPassport = (req) => {
                 return done(null, user);
 
             } catch (error) {
+                return done(error);
+            }
+        }
+    ))
+
+    passport.use("registro", new local.Strategy(
+        {
+            usernameField: "email",
+            passReqToCallback: true
+        },
+        async (req, username, password, done) => {
+            try {
+                const newUser = await usersService.createUser(req.body);
+                return done(null, newUser)
+            } catch (error) {
+                if (error.statusCode && error.statusCode < 500) {
+                    return done(null, false, { message: error.message });
+                }
                 return done(error);
             }
         }

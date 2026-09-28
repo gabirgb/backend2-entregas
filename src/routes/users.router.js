@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { usersController } from "../controllers/index.js";
 import { auth } from "../middlewares/auth.js";
+import passport from "passport";
 
 export const router = Router();
 
@@ -9,6 +10,15 @@ router.get('/', auth, usersController.getUsers);
 router.get('/:id', auth, usersController.getUsersById);
 router.get('/email/:email', auth, usersController.getUsersByEmail);
 
-router.post('/register', usersController.createUser);
+router.post(
+    '/register',
+    passport.authenticate(
+        "registro",
+        {
+            session: false,
+            failureRedirect: "/error"
+        }
+    ),
+    usersController.createUser);
 
 

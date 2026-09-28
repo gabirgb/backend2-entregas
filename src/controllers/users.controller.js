@@ -83,23 +83,25 @@ export class UsersController {
 
     createUser = async (req, res, next) => {
         try {
-            const newUser = await this.usersService.createUser(req.body);
+            // recibo desde passport.authenticate
+            const newUser = req.user;
+
             res.setHeader('Content-type', 'application/json');
             return res.status(201).json({
                 status: 'success',
                 message: 'Usuario creado exitosamente',
-                payload: newUser // Devolver solo los campos necesarios usando DTO
+                payload: newUser
             });
 
         } catch (error) {
-            // Si el servicio lanzó un error de validacion (statusCode 400)
+
             if (error.statusCode) {
                 return res.status(error.statusCode).json({
                     status: 'error',
                     message: error.message
                 });
             }
-            // Si no, paso directamente al middleware errorHandler
+
             next(error);
 
         }
