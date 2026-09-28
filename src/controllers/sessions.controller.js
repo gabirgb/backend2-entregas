@@ -1,23 +1,12 @@
 import { UsersDTO } from "../dto/users.dto.js";
-import { comparePassword } from "../utils/crypto.js";
 import { generateToken } from '../utils/jwt.js';
 import { config } from "../config/config.js"
 
-export class SessionsController {
-    constructor(usersDAO) {
-        this.usersDAO = usersDAO;
-    }
+export const sessionsController = {
 
     // GET /api/sessions/current (Suele pedirlo el enunciado)
-    getCurrentSession = async (req, res, next) => {
+    getCurrentSession: async (req, res, next) => {
         try {
-            if (!req.user) {
-                res.setHeader('Content-Type', 'application/json');
-                return res.status(401).json({
-                    status: 'error',
-                    message: 'No hay sesion activa'
-                });
-            }
 
             res.setHeader('Content-Type', 'application/json');
             return res.status(200).json({
@@ -25,44 +14,18 @@ export class SessionsController {
                 message: 'Detalles de la sesión activa',
                 payload: req.user
             });
+
         } catch (error) {
             next(error);
         }
-    }
+    },
 
     // POST /api/sessions/login
-    login = async (req, res, next) => {
-        let { email, password } = req.body;
-
-        if (!email || !password) {
-            res.setHeader('Content-Type', 'application/json');
-            return res.status(400).json({
-                status: 'error',
-                message: 'Email y contraseña son requeridos'
-            });
-        }
+    login: async (req, res, next) => {
 
         try {
-            let user = await this.usersDAO.getByEmail(email);
-            if (!user) {
-                res.setHeader('Content-Type', 'application/json');
-                return res.status(404).json({
-                    status: 'error',
-                    message: 'Credenciales inválidas.'
-                });
-            }
-
-            if (!comparePassword(password, user.password)) {
-                res.setHeader('Content-Type', 'application/json');
-                return res.status(401).json({
-                    status: 'error',
-                    message: 'Credenciales inválidas.'
-                });
-            }
-
-            const userDTO = new UsersDTO(user);
+            const userDTO = new UsersDTO(req.user);
             const userPayload = { ...userDTO };
-
             const token = generateToken(userPayload);
 
             res.cookie("currentUser", token, {
@@ -76,16 +39,17 @@ export class SessionsController {
             res.setHeader('Content-Type', 'application/json');
             return res.status(200).json({
                 status: 'success',
-                message: `Bienvenido ${user.first_name} ${user.last_name}`,
+                message: `Bienvenido ${req.user.first_name} ${req.user.last_name}`,
                 payload: userPayload
             });
+
         } catch (error) {
             next(error);
         }
-    }
+    },
 
     // POST /api/sessions/logout
-    logout = async (req, res, next) => {
+    logout: async (req, res, next) => {
         try {
             res.clearCookie('currentUser', {
                 httpOnly: true,

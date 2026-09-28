@@ -1,4 +1,5 @@
 // middleware super sencillo para crear logs, por lo general todo lo q se trate de seguridad se loggea
+import { config } from "../config/config.js";
 
 export const requestLogger = (req, res, next) => {
     const isProduction = config.general.NODE_ENV === 'production';

@@ -1,13 +1,23 @@
+// config de directorios base
+import { fileURLToPath } from 'url';
+import path from 'path';
+
 import express from 'express';
+
+//ruteadores
 import { router as eventsRouter } from './routes/events.router.js';
 import { router as usersRouter } from './routes/users.router.js';
 import { router as sessionsRouter } from './routes/sessions.router.js';
+
+//middlewares
 import { errorHandler } from './middlewares/errorHandler.js';
 import { requestLogger } from './middlewares/log.js';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { auth } from './middlewares/auth.js';
+
+//sesiones
 import cookieParser from 'cookie-parser';
+import passport from 'passport';
+import { inicializarPassport } from './config/passport.config.js';
 import { verifySameOrigin } from './middlewares/verifySameOrigin.js';
 
 const app = express();
@@ -20,10 +30,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 //MMIDLEWARES BASICOS
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+//Passport
+app.use(passport.initialize());
+inicializarPassport();
+
+// Cookies
 app.use(cookieParser());
 app.use(verifySameOrigin);
 
-//ROUTES
+//ruteadores
 app.use('/api/events', eventsRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/sessions', sessionsRouter);
@@ -44,18 +60,30 @@ app.get('/api/health', requestLogger, (req, res) => {
     return res.status(200).json("Servidor OK");
 });
 
-//-tests
-app.get('/test', auth, (req, res) => {
-    if (req.query.error) {
-        throw new Error("Error de pruebas!");
-    }
-
+//-errores genericos passport
+app.get("/error", (req, res) => {
     res.setHeader('Content-Type', 'application/json');
-    return res.status(200).json({
-        payload: "Test ok!!",
-        user: req.user.nombre
+    return res.status(401).json({ error: `Error al autenticar.` });
+})
+
+//-tests
+app.get('/test',
+    passport.authenticate(
+        "current",
+        {
+            session: false,
+            failureRedirect: "/error"
+        }),
+    (req, res) => {
+
+        res.setHeader('Content-Type', 'application/json');
+
+        return res.status(200).json({
+            payload: "Test ok!!",
+            user: req.user.nombre
+        });
     });
-});
+
 
 // Manejo de errores
 app.use(errorHandler);
