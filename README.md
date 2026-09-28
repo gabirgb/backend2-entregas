@@ -3,38 +3,47 @@
 
 <h3 align="center">Información técnica del proyecto</h3>
 <h4>🧱 Stack</h4>
-Node.js (usando ESM) con las siguientes dependencias:
+<p>Node.js (usando ESM) con las siguientes dependencias:</p>
 <ul>
 <li>Express</li>
 <li>Mongoose</li>
 <li>bcrypt</li>
 <li>dotenv</li>
+<li>cookie-parser</li>
+<li>jsonWebToken</li>
+<li>Passport</li>
+<li>Passport-JWT</li>
+<li>Passport-local</li>
 </ul>
 
 <h5>🏢 Arquitectura</h5>
-La API sigue una arquitectura en capas con separación de responsabilidades:
+<p>La API sigue una arquitectura en capas con separación de responsabilidades:</p>
 <ul>
-<li>Enrutadores: Definen los endpoints y dirigen las solicitudes.</li>
-<li>Controladores: Manejan el flujo de la petición HTTP, validan la entrada y envían la respuesta en formato JSON.</li>
-<li>Servicios: Contienen la lógica de negocio y las reglas de la aplicación.</li>
-<li>DAOs: Gestionan el acceso y la persistencia de datos (persistencia desacoplada).</li>
-<li>Modelos: Definen los esquemas y estructuras de los datos.</li>
+  <li><b>Rutas (Routes):</b> Definen los endpoints de la API y mapean las solicitudes hacia los controladores.</li>
+  <li><b>Controladores (Controllers):</b> Manejan la interacción HTTP (req/res), gestionan la autenticación con Passport y devuelven las respuestas JSON.</li>
+  <li><b>DTOs (Data Transfer Objects):</b> Filtran y formatean los datos expuestos hacia y desde el cliente.</li>
+  <li><b>Servicios (Services / Repositories):</b> Contienen la lógica de negocio pura y la orquestación de datos.</li>
+  <li><b>DAOs y Modelos (Data Access / Models):</b> Gestionan el acceso directo a la base de datos y la definición de esquemas.</li>
 </ul>
+
 <h5>🌲 Árbol de directorios</h5>
 ├── src/</br>
 │   ├── app.js</br>
 │   ├── server.js</br>
-│   ├── config/</br>
-│   ├── controllers/</br>
-│   ├── constatnts/</br>
-│   ├── dao/</br>
-│   ├── helpers/</br>
-│   ├── middlewares/</br>
-│   ├── models/</br>
-│   ├── repositories/</br>
-│   ├── routes/</br>
-│   ├── services/</br>
-│   └── utils/</br>
+│   ├── config/ - # Configuración de entorno, Passport y DB</br>
+│   ├── constants/ - # Enums y constantes globales</br>
+│   ├── controllers/ - # Capa de Presentación (Manejo de req/res)</br>
+│   ├── dao/ - # Objetos de Acceso a Datos (Persistencia)</br>
+│   ├── dto/ - # Transformación de datos para transferencias</br>
+│   ├── helpers/ - # Funciones auxiliares genéricas</br>
+│   ├── middlewares/ - # Middlewares de Express (validaciones, roles, etc.)</br>
+│   ├── models/ - # Esquemas y modelos (Mongoose / ORM)</br>
+│   ├── public/ - # Archivos estáticos</br>
+│   ├── repositories/ - # Patrón Repositorio (abstracción sobre DAOs)</br>
+│   ├── routes/ - # Definición de endpoints y rutas</br>
+│   ├── services/ - # Capa de Lógica de Negocio</br>
+│   └── utils/ - # Utilidades generales (logger, BCrypt, etc.)</br>
+├── tests/ - # Pruebas y testing</br>
 ├── .env.example</br>
 ├── .gitignore</br>
 ├── package.json</br>
@@ -43,9 +52,9 @@ La API sigue una arquitectura en capas con separación de responsabilidades:
 <h5>🪸 Variables de entorno</h5>
 <strong>PORT:</strong> Puerto en el que escucha el servidor (ej: 8080)</br>
 <strong>NODE_ENV:</strong> Entorno de ejecución (development, production)</br>
-<strong>USER_DUMMY:</strong> nombre de usuario dummy en esta primera etapa hasta que comencemos a usar autenticacion de usuarios.</br>
-<strong>SECRET_DUMMY:</strong> password de usuario dummy en esta primera etapa hasta que comencemos a usar autenticacion de usuarios.</br>
-<strong>MONGO_URI:</strong> URI de conexión a la base de datos MongoDB ( ej: mongodb://localhost:27017/eventos )</br>
+<strong>JWT_SECRET=</strong> password de usuario dummy en esta primera etapa hasta que comencemos a usar autenticacion de usuarios.</br>
+<strong>JWT_EXPIRES_IN=</strong> tiempo de expiración del token.</br>
+<strong>MONGO_URL:</strong> URI de conexión a la base de datos MongoDB ( ej: mongodb://localhost:27017/eventos )</br>
 <strong>DB_NAME:</strong> Nombre de la base de datos en MongoDB (ej: "mibase")</br>
 
 <h5>👩🏻‍💻 Instalación y Ejecución</h5>
@@ -167,13 +176,42 @@ La API sigue una arquitectura en capas con separación de responsabilidades:
 <li>Respuesta esperada: <code>({ "status": "success", "message": "Gracias por visitarnos." })</code></li>
 </ul>
 
-<h5>👩🏻‍💻 Sobre mi </h5>
-- Me llamo Gabriela, soy de Argentina y este proyecto corresponde a una práctica para mi curso de Backend II en Coderhouse.
-- 📫 Podés encontrarme en **gabienelmundo@gmail.com**
+<h5>🛂 Passport</h5>
+<p>Estrategias implementadas: current, login y registro. La aplicación queda preparada para agregar nuevas estrategias de proveedores externos en passport.config.js.</p>
 
-//TODO: actualizar directorio carpetas con tests y aclarar cuales son. actualizar dependencias con espress - sessions
+<h6>👩🏻‍💻 Sobre mi </h6>
+<p>- Me llamo Gabriela, soy de Argentina y este proyecto corresponde a una práctica para mi curso de Backend II en Coderhouse.</p>
+<p>- 📫 Podés encontrarme en **gabienelmundo@gmail.com**</p>
 
-<h2>Screenshots</h2>
+<h2>📷 Screenshots</h2>
+<h3>Registro de usuarios: password hasheado y payload sin datos sensibles.</h3>
 <p align="center">
   <img src="./assets/screenshot.png" alt="Captura de pantalla MongoDB Compass - Postman" width="500" />
+</p>
+
+<h3>Passport y flujo de autenticación: register → login → /current (200) → logout → /current (401)</h3>
+
+<h4>Registro</h3>
+<p align="center">
+  <img src="./assets/registro.png" alt="Registro" width="500" />
+</p>
+
+<h4>Login</h3>
+<p align="center">
+  <img src="./assets/login.png" alt="Login" width="500" />
+</p>
+
+<h4>Current - Estado 200</h3>
+<p align="center">
+  <img src="./assets/current-200.png" alt="Current - Estado 200" width="500" />
+</p>
+
+<h4>Logout</h3>
+<p align="center">
+  <img src="./assets/logout.png" alt="Logout" width="500" />
+</p>
+
+<h4>Current - Estado 401</h3>
+<p align="center">
+  <img src="./assets/current-401.png" alt="Current - Estado 401" width="500" />
 </p>

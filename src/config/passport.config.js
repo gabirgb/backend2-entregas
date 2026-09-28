@@ -56,6 +56,7 @@ export const inicializarPassport = (req) => {
         }
     ))
 
+    //registro
     passport.use("registro", new local.Strategy(
         {
             usernameField: "email",
@@ -73,4 +74,6 @@ export const inicializarPassport = (req) => {
             }
         }
     ))
+
+    //Nuevas estrategias... 
 }
