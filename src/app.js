@@ -11,7 +11,6 @@ import { router as sessionsRouter } from './routes/sessions.router.js';
 
 //middlewares
 import { errorHandler } from './middlewares/errorHandler.js';
-import { requestLogger } from './middlewares/log.js';
 
 //sesiones
 import cookieParser from 'cookie-parser';
@@ -51,38 +50,13 @@ app.get('/', (req, res) => {
 });
 
 //-health
-app.get('/api/health', requestLogger, (req, res) => {
+app.get('/api/health', (req, res) => {
     if (req.query.error) {
         throw new Error("Error de pruebas!");
     }
     res.setHeader('Content-Type', 'application/json');
     return res.status(200).json("Servidor OK");
 });
-
-//-errores genericos passport
-app.get("/error", (req, res) => {
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(401).json({ error: `Error al autenticar.` });
-})
-
-//-tests
-app.get('/test',
-    passport.authenticate(
-        "current",
-        {
-            session: false,
-            failureRedirect: "/error"
-        }),
-    (req, res) => {
-
-        res.setHeader('Content-Type', 'application/json');
-
-        return res.status(200).json({
-            payload: "Test ok!!",
-            user: req.user.nombre
-        });
-    });
-
 
 // Manejo de errores
 app.use(errorHandler);

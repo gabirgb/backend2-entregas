@@ -4,7 +4,7 @@ import { config } from "../config/config.js"
 
 export const sessionsController = {
 
-    // GET /api/sessions/current (Suele pedirlo el enunciado)
+    // GET /api/sessions/current
     getCurrentSession: async (req, res, next) => {
         try {
 

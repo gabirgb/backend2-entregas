@@ -1,21 +1,29 @@
 import { sanitizeInput } from "../utils/sanitizer.js";
 import { validateEventHours, validateEventStartDate } from "../helpers/dateValidationRules.js";
 import { VALID_EVENT_STATUSES } from "../constants/events.constants.js";
+import { BadRequestError, NotFoundError } from "../utils/CustomError.js";
 
-// creo la clase
 export class EventsServices {
     constructor(eventsDAO) {
         this.eventsDAO = eventsDAO; //el this se refiere al objeto actual.
     }
 
     getAllEvents = async (queryParams) => {
-        return await this.eventsDAO.get(queryParams);
+        const events = await this.eventsDAO.getAllEvents(queryParams);
+        if (!events || events.length === 0) {
+            throw new NotFoundError('No hay resultados que coincidan con sus criterios de busqueda.');
+        }
+        return events;
     }
 
     //TODO: filtrar los eventos por fecha (implementar fromDate y toDate)
 
     getEventById = async (id) => {
-        return await this.eventsDAO.getById(id);
+        const event = await this.eventsDAO.getById(id);
+        if (!event || event.length === 0) {
+            throw new NotFoundError('No se encontró el evento con id ${id}');
+        }
+        return event;
     }
 
     createEvent = async (rawEventData) => {
@@ -34,31 +42,23 @@ export class EventsServices {
 
         //2. valido campos obligatorios
         if (!code || !title || !description || !artist || !category || !location || !price || !totalTickets) {
-            const error = new Error('Faltan campos obligatorios (code/ title/ description/ location/ artist/ category/ price/ totalTickets)');
-            error.statusCode = 400;
-            throw error;
+            throw new BadRequestError('Faltan datos obligatorios');
         }
 
         //3. Valido tipo de datos y errores logicos
         if (typeof price !== 'number' || typeof totalTickets !== 'number' || totalTickets < 0) {
-            const error = new Error('Valores inválidos: El precio y los tickets deben ser números. Los tickets no pueden ser negativos');
-            error.statusCode = 400;
-            throw error;
+            throw new BadRequestError('El precio y la cantidad de tickets deben ser números. El stock no pueden ser negativo');
         }
 
         if (status && !VALID_EVENT_STATUSES.includes(status.toLowerCase())) {
-            const error = new Error(`El estado ${status} no es válido. Opciones permitidas: ${VALID_EVENT_STATUSES.join(', ')}`);
-            error.statusCode = 400;
-            throw error;
+            throw new BadRequestError(`El estado ${status} no es válido. Opciones permitidas: ${VALID_EVENT_STATUSES.join(', ')}`);
         }
 
         // 4. Validar fecha (si viene informada)
         if (date) {
             const dateValidation = validateEventStartDate(date);
             if (!dateValidation.isValid) {
-                const error = new Error(dateValidation.error);
-                error.statusCode = 400;
-                throw error;
+                throw new BadRequestError('La fecha del evento no es válida.');
             }
         }
 
@@ -66,15 +66,11 @@ export class EventsServices {
         if (startTime || endTime) {
             const hoursValidation = validateEventHours(startTime, endTime);
             if (!hoursValidation.isValid) {
-                const error = new Error(hoursValidation.error);
-                error.statusCode = 400;
-                throw error;
+                throw new BadRequestError('Los horarios del evento no son válidos. Asegúrese de que el horario de inicio sea anterior al horario de finalización y que ambos estén en formato HH:mm.');
             }
         }
 
-        // 5. Crear el evento enviando solo los campos desestructurados y limpios: Al construir EventData explícitamente, evito que el cliente inyecte propiedades no deseadas que vengan en el req.body.
-        //Además, creo el date solamente si el usuario asignó fecha al evento
-        // 5. Crear el objeto eventData limpio
+        //5. Armo un objeto limpio con los datos validados y sanitizados para enviarlo al DAO
         const cleanEventData = {
             code,
             title,

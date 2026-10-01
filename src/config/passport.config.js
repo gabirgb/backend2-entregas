@@ -24,7 +24,16 @@ export const inicializarPassport = (req) => {
     },
         async (payload, done) => {
             try {
-                return done(null, payload)
+                const user = await usersService.getUsersById(payload.id);
+
+                // si el usuario no existe, se devuelve un error (p.e. puede haber sido eliminado mientras tenia sesion activa, y el token sigue siendo válido)
+                if (!user) {
+                    return done(null, false, { message: "El usuario ya no existe en el sistema" });
+                }
+
+                // 3. Todo correcto
+                return done(null, user);
+
             } catch (error) {
                 return done(error);
             }
@@ -38,14 +47,15 @@ export const inicializarPassport = (req) => {
         },
         async (username, password, done) => {
             try {
-                let user = await usersDAO.getByEmail(username.toLowerCase());
+                //TODO: eliminar toLowerCase que ya lo impmemento en el DAO (creo)
+                const user = await usersDAO.getByEmail(username.toLowerCase());
 
                 if (!user) {
-                    return done(null, false)
+                    return done(null, false, { message: "Credenciales inválidas." });
                 }
 
                 if (!comparePassword(password, user.password)) {
-                    return done(null, false)
+                    return done(null, false, { message: "Credenciales inválidas." });
                 }
                 //se crea req.user
                 return done(null, user);
@@ -66,10 +76,9 @@ export const inicializarPassport = (req) => {
             try {
                 const newUser = await usersService.createUser(req.body);
                 return done(null, newUser)
+
             } catch (error) {
-                if (error.statusCode && error.statusCode < 500) {
-                    return done(null, false, { message: error.message });
-                }
+
                 return done(error);
             }
         }

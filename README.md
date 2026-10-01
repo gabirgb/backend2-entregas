@@ -215,3 +215,8 @@
 <p align="center">
   <img src="./assets/current-401.png" alt="Current - Estado 401" width="500" />
 </p>
+
+TODO: agregar info sobre middleware de errores e implementacion de clase de errores propios
+// passportCall.js - es un middleware que creo para encapsular la lógica que trabaja en el rutedor al ejecutar los "return done" exitosos. aalí tambien capturo los posibles errores como fallas en la verificacion del token
+elimino auth.js
+nuevos tests y dependencias dev (supertest)

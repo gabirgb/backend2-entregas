@@ -2,7 +2,7 @@ import { userModel } from "../models/users.model.js";
 
 export class UsersDAO {
 
-    async get(queryOptions = {}) {
+    async getAllUsers(queryOptions = {}) {
         const { first_name, last_name, email, role, isActive } = queryOptions;
         const mongoQuery = {};
 

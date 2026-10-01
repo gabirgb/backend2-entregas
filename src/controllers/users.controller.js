@@ -7,20 +7,8 @@ export class UsersController {
 
     getUsers = async (req, res, next) => {
         try {
-            // 1. Pedimos los usuarios al DAO pasándole los query params de la URL
+
             const users = await this.usersService.getAllUsers(req.query);
-
-            //2. evalúo si la busqueda tuvo resultados
-            if (!users || users.length === 0) {
-                res.setHeader('Content-type', 'application/json');
-                return res.status(404).json({
-                    status: 'error',
-                    message: 'No hay usuarios que coincidan con sus criterios de búsqueda'
-                });
-            }
-
-            //3. si hay usuarios devuelvo la rta exitosa
-            // Mapeamos cada objeto de usuario a su DTO correspondiente
             const usersDTO = users.map(user => new UsersDTO(user));
 
             res.setHeader('Content-type', 'application/json');
@@ -39,14 +27,6 @@ export class UsersController {
             const { id } = req.params;
             const user = await this.usersService.getUsersById(id);
 
-            if (!user) {
-                res.setHeader('Content-type', 'application/json');
-                return res.status(404).json({
-                    status: 'error',
-                    message: `No se encontró al usuario con id ${id}`
-                });
-            }
-
             res.setHeader('Content-type', 'application/json');
             return res.status(200).json({
                 status: 'success',
@@ -62,14 +42,6 @@ export class UsersController {
         try {
             const { email } = req.params;
             const user = await this.usersService.getUsersByEmail(email);
-
-            if (!user) {
-                res.setHeader('Content-type', 'application/json');
-                return res.status(404).json({
-                    status: 'error',
-                    message: `No se encontró al usuario con email ${email}`
-                });
-            }
 
             res.setHeader('Content-type', 'application/json');
             return res.status(200).json({
@@ -94,13 +66,6 @@ export class UsersController {
             });
 
         } catch (error) {
-
-            if (error.statusCode) {
-                return res.status(error.statusCode).json({
-                    status: 'error',
-                    message: error.message
-                });
-            }
 
             next(error);
 
