@@ -1,9 +1,12 @@
 import passport from "passport";
 import passportJWT from "passport-jwt";
 import local from "passport-local";
+import github from "passport-github2";
 import { config } from "./config.js";
 import { usersDAO, usersService } from "../controllers/index.js";
 import { comparePassword } from "../utils/crypto.js";
+import { NotFoundError } from "../utils/CustomError.js";
+import crypto from 'crypto';
 
 
 const buscarToken = (req) => {
@@ -84,5 +87,46 @@ export const inicializarPassport = (req) => {
         }
     ))
 
+    passport.use("github", new github.Strategy(
+        {
+            callbackURL: config.github.CALLBACK_URL,
+            clientSecret: config.github.CLIENT_SECRET,
+            clientID: config.github.CLIENT_ID,
+            userAgent: config.github.USER_AGENT
+        },
+        async (accessToken, refreshToken, profile, done) => {
+            try {
+                console.log('Llegó a la estrategia');
+                const email = profile.emails?.[0]?.value || profile._json?.email || `${profile.username}@github.com`;
+
+                let user = null;
+
+                try {
+                    user = await usersService.getUsersByEmail(email);
+                } catch (error) {
+                    if (error.statusCode !== 404 && error.name !== 'NotFoundError') {
+                        throw new NotFoundError('Usuario no encontrado');
+                    }
+                }
+
+                if (!user) {
+                    const nameParts = (profile.displayName || profile.username || '').split(' ');
+                    const randomPassword = crypto.randomBytes(16).toString('hex');
+
+                    user = await usersService.createUser({
+                        first_name: nameParts[0] || 'Usuario',
+                        last_name: nameParts.slice(1).join(' ') || 'Github',
+                        email: email,
+                        password: randomPassword
+                    })
+                }
+
+                return done(null, user);
+
+            } catch (error) {
+                return done(error);
+            }
+        }
+    ))
     //Nuevas estrategias... 
 }

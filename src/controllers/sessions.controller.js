@@ -11,7 +11,7 @@ export const sessionsController = {
             res.setHeader('Content-Type', 'application/json');
             return res.status(200).json({
                 status: 'success',
-                message: 'Detalles de la sesión activa',
+                message: `Usuario actual: ${req.user.first_name} ${req.user.last_name}`,
                 payload: req.user
             });
 
@@ -44,6 +44,35 @@ export const sessionsController = {
             });
 
         } catch (error) {
+            next(error);
+        }
+    },
+
+    loginGithub: async (req, res, next) => {
+        try {
+            console.log('Usuario recibido de passport: ', req.user);
+            const userData = {
+                ...req.user,
+                first_name: req.user.first_name || req.user.name || req.user.username,
+                last_name: req.user.last_name || ''
+            };
+
+            const userDTO = new UsersDTO(userData);
+            const userPayload = { ...userDTO };
+            const token = generateToken(userPayload);
+
+            req.cookie('currentUser', token, {
+                httpOnly: true,
+                secure: config.general.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 24 * 60 * 60 * 1000,
+                path: '/'
+            });
+
+            return res.redirect('http://localhost:3500/profile') //o al dashboard
+
+        } catch (error) {
+
             next(error);
         }
     },

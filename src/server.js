@@ -12,7 +12,7 @@ const startServer = async () => {
         console.log(`Conexión a la base de datos MongoDB establecida con éxito`);
 
         const server = app.listen(PORT, () => {
-            console.log(`Servidor Express escuchando en el puerto ${server.address().port}`);
+            console.log(`Servidor Express escuchando en el puerto ${PORT}`);
         });
     } catch (error) {
         console.error('Error al iniciar el servidor:', error);

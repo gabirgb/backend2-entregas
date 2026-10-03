@@ -16,7 +16,6 @@ import { errorHandler } from './middlewares/errorHandler.js';
 import cookieParser from 'cookie-parser';
 import passport from 'passport';
 import { inicializarPassport } from './config/passport.config.js';
-import { verifySameOrigin } from './middlewares/verifySameOrigin.js';
 
 const app = express();
 
@@ -35,7 +34,6 @@ inicializarPassport();
 
 // Cookies
 app.use(cookieParser());
-app.use(verifySameOrigin);
 
 //ruteadores
 app.use('/api/events', eventsRouter);

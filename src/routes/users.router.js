@@ -4,7 +4,6 @@ import { passportCall } from "../middlewares/passportCall.js";
 
 export const router = Router();
 
-//router.use(auth);
 router.get('/', usersController.getUsers);
 router.get('/:id', usersController.getUsersById);
 router.get('/email/:email', usersController.getUsersByEmail);
