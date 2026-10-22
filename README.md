@@ -14,12 +14,14 @@
 <li>Passport</li>
 <li>Passport-JWT</li>
 <li>Passport-local</li>
+<li>Passport-Github2</li>
 </ul>
 
 <h5>🏢 Arquitectura</h5>
 <p>La API sigue una arquitectura en capas con separación de responsabilidades:</p>
 <ul>
   <li><b>Rutas (Routes):</b> Definen los endpoints de la API y mapean las solicitudes hacia los controladores.</li>
+  <li><b>Middlewares:</b> Capa intermedia encargada de la autenticación (`passportCall`), autorización basada en roles (`authorization`) y validación de propiedad de recursos (`verifyEventOwner`).</li>
   <li><b>Controladores (Controllers):</b> Manejan la interacción HTTP (req/res), gestionan la autenticación con Passport y devuelven las respuestas JSON.</li>
   <li><b>DTOs (Data Transfer Objects):</b> Filtran y formatean los datos expuestos hacia y desde el cliente.</li>
   <li><b>Servicios (Services / Repositories):</b> Contienen la lógica de negocio pura y la orquestación de datos.</li>
@@ -36,7 +38,7 @@
 │   ├── dao/ - # Objetos de Acceso a Datos (Persistencia)</br>
 │   ├── dto/ - # Transformación de datos para transferencias</br>
 │   ├── helpers/ - # Funciones auxiliares genéricas</br>
-│   ├── middlewares/ - # Middlewares de Express (validaciones, roles, etc.)</br>
+│   ├── middlewares/ - # Middlewares para validaciones, roles, custom errors, passport, etc.</br>
 │   ├── models/ - # Esquemas y modelos (Mongoose / ORM)</br>
 │   ├── public/ - # Archivos estáticos</br>
 │   ├── repositories/ - # Patrón Repositorio (abstracción sobre DAOs)</br>
@@ -56,6 +58,67 @@
 <strong>JWT_EXPIRES_IN=</strong> tiempo de expiración del token.</br>
 <strong>MONGO_URL:</strong> URI de conexión a la base de datos MongoDB ( ej: mongodb://localhost:27017/eventos )</br>
 <strong>DB_NAME:</strong> Nombre de la base de datos en MongoDB (ej: "mibase")</br>
+<strong>CALLBACK_URL:</strong> URL de retorno una vez que el usuario fue autenticado en Github (URL completa para la consola de GitHub y para Passport).</br>
+<strong>CALLBACK_PATH:</strong> Path relativo ÚNICAMENTE para la ruta de Express.</br>
+<strong>CLIENT_SECRET:</strong> Clave de github.
+<strong>CLIENT_ID:</strong> ID de Github.
+<strong>USER_AGENT:</strong> Nombre del proyecto en Github.
+
+<h5>🔐 Sistema de Roles y Matriz de Permisos</h5>
+<p>El modelo de usuario incluye el campo <code>role</code> con los valores permitidos: <code>user</code>, <code>organizer</code> y <code>admin</code> (por defecto: <code>user</code>). El registro público fuerza automáticamente el rol a <code>user</code> para evitar la inyección ilícita de roles elevados desde el cliente.</p>
+<table align="center">
+  <thead>
+    <tr>
+      <th>Permiso / Acción</th>
+      <th align="center">user 👤</th>
+      <th align="center">organizer 🎟️</th>
+      <th align="center">admin ⚡</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Consultar eventos publicados (<code>GET /api/events</code>)</td>
+      <td align="center">✅ Sí</td>
+      <td align="center">✅ Sí</td>
+      <td align="center">✅ Sí</td>
+    </tr>
+    <tr>
+      <td>Crear nuevos eventos (<code>POST /api/events</code>)</td>
+      <td align="center">❌ No</td>
+      <td align="center">✅ Sí</td>
+      <td align="center">✅ Sí</td>
+    </tr>
+    <tr>
+      <td>Modificar / cancelar eventos <b>propios</b> (<code>PUT/DELETE /api/events/:id</code>)</td>
+      <td align="center">❌ No</td>
+      <td align="center">✅ Sí</td>
+      <td align="center">✅ Sí</td>
+    </tr>
+    <tr>
+      <td>Modificar / cancelar <b>cualquier</b> evento</td>
+      <td align="center">❌ No</td>
+      <td align="center">❌ No</td>
+      <td align="center">✅ Sí</td>
+    </tr>
+    <tr>
+      <td>Ver todos los usuarios (<code>GET /api/admin/users</code>)</td>
+      <td align="center">❌ No</td>
+      <td align="center">❌ No</td>
+      <td align="center">✅ Sí</td>
+    </tr>
+  </tbody>
+</table>
+
+<h5>🚨 Manejo Explicito de Errores de Autenticación y Autorización</h5>
+<p>La API distingue estrictamente la diferencia entre fallas de identificación y falta de privilegios:</p>
+<ul>
+  <li>
+    <b>HTTP 401 Unauthorized:</b> Se responde cuando <b>NO hay una sesión válida</b> (falta el token JWT en la cookie <code>currentUser</code>, el token está expirado, o las credenciales de login son inválidas).
+  </li>
+  <li>
+    <b>HTTP 403 Forbidden:</b> Se responde cuando <b>SI hay una sesión activa</b> pero el usuario no posee los permisos requeridos (ej. un <code>user</code> intentando crear un evento, o un <code>organizer</code> intentando modificar un evento que no le pertenece).
+  </li>
+</ul>
 
 <h5>👩🏻‍💻 Instalación y Ejecución</h5>
 <ol>
@@ -64,7 +127,7 @@
 <code>cd &lt nombre-carpeta &gt</code>
 </li>
 <li>Instalar dependencias:</br>
-<code>npm install [dependencie]</code>
+<code>npm install [dependencies]</code>
 </li>
 <li>Configurar el entorno:</br>
 <code>cp .env.example .env</code>
@@ -75,6 +138,53 @@
 </ol>
 
 <h5>📍 Rutas Disponibles (Endpoints)</h5>
+<h6>Públicas</h6>
+<ul>
+  <li><code>GET /api/health</code> - Muestra el estado del servidor.</li>
+  <li><code>GET /api/events</code> - Listado público de eventos.</li>
+  <li><code>GET /api/events/:id</code> - Detalle público de un evento.</li>
+  <li><code>POST /api/users/register</code> - Registro de nuevo usuario (fuerza rol <code>user</code>).</li>
+  <li><code>POST /api/sessions/login</code> - Autenticación y generación de JWT en cookie HTTP-Only.</li>
+  <li><code>GET /api/sessions/login/github</code> - Inicio de sesión vía GitHub OAuth2.</li>
+</ul>
+<h6>Protegidas (Requieren Autenticación)</h6>
+<ul>
+  <li>
+    <code>GET /api/sessions/current</code>
+    <ul>
+      <li><b>Acceso:</b> Cualquier usuario autenticado (<code>401</code> si no hay sesión).</li>
+      <li><b>Respuesta:</b> DTO del usuario autenticado sin datos sensibles.</li>
+    </ul>
+  </li>
+  <li>
+    <code>POST /api/sessions/logout</code>
+    <ul>
+      <li><b>Acceso:</b> Cualquier usuario autenticado. Limpia la cookie de sesión.</li>
+    </ul>
+  </li>
+  <li>
+    <code>POST /api/events</code>
+    <ul>
+      <li><b>Acceso:</b> Solo <code>organizer</code> o <code>admin</code> (<code>403</code> para rol <code>user</code>).</li>
+      <li><b>Asignación:</b> El evento guarda automáticamente el <code>organizerId</code> del creador.</li>
+    </ul>
+  </li>
+  <li>
+    <code>PUT /api/events/:id</code> & <code>DELETE /api/events/:id</code>
+    <ul>
+      <li><b>Acceso:</b> <code>organizer</code> (solo si es el creador del evento) o <code>admin</code> (acceso total).</li>
+      <li><b>Middleware:</b> <code>verifyEventOwner</code> valida la propiedad del recurso mediante el ID del organizador.</li>
+    </ul>
+  </li>
+  <li>
+    <code>GET /api/admin/users</code>
+    <ul>
+      <li><b>Acceso:</b> Exclusivo para <code>admin</code> (<code>403</code> para otros roles).</li>
+      <li><b>Respuesta:</b> Listado completo de usuarios registrados mediante <code>UsersDTO</code>.</li>
+    </ul>
+  </li>
+</ul>
+
 <h6>GET /api/health</h6>
 <ul>
 <li>Muestra el estado del servidor</li>
@@ -176,47 +286,34 @@
 <li>Respuesta esperada: <code>({ "status": "success", "message": "Gracias por visitarnos." })</code></li>
 </ul>
 
-<h5>🛂 Passport</h5>
-<p>Estrategias implementadas: current, login y registro. La aplicación queda preparada para agregar nuevas estrategias de proveedores externos en passport.config.js.</p>
+<h5>🛂 Passport & Seguridad</h5>
+<p>Estrategias implementadas en <code>passport.config.js</code>:</p>
+<ul>
+  <li><b><code>current</code>:</b> Extrae el token JWT desde la cookie <code>currentUser</code> para validar la sesión activa.</li>
+  <li><b><code>login</code>:</b> Valida las credenciales (email y contraseña con <code>bcrypt</code>).</li>
+  <li><b><code>registro</code>:</b> Crea nuevos usuarios con contraseñas hasheadas.</li>
+  <li><b><code>github</code>:</b> Autenticación OAuth2 de terceros.</li>
+</ul>
 
 <h6>👩🏻‍💻 Sobre mi </h6>
 <p>- Me llamo Gabriela, soy de Argentina y este proyecto corresponde a una práctica para mi curso de Backend II en Coderhouse.</p>
 <p>- 📫 Podés encontrarme en **gabienelmundo@gmail.com**</p>
 
 <h2>📷 Screenshots</h2>
-<h3>Registro de usuarios: password hasheado y payload sin datos sensibles.</h3>
+<h3>Autorización: POST /api/events con user (403) y con organizer (201).</h3>
 <p align="center">
-  <img src="./assets/screenshot.png" alt="Captura de pantalla MongoDB Compass - Postman" width="500" />
+  <img src="./assets/Screenshot 2026-10-21 223510.png" alt="Captura de pantalla de Postman - User (403)" width="500" />
 </p>
 
-<h3>Passport y flujo de autenticación: register → login → /current (200) → logout → /current (401)</h3>
-
-<h4>Registro</h3>
 <p align="center">
-  <img src="./assets/registro.png" alt="Registro" width="500" />
+  <img src="./assets/Screenshot 2026-10-21 223639.png" alt="Captura de pantalla de Postman - Organizer (201)" width="500" />
 </p>
 
-<h4>Login</h3>
+<h3>Autorización: ruta administrativa con organizer (403) vs admin (200).</h3>
 <p align="center">
-  <img src="./assets/login.png" alt="Login" width="500" />
+  <img src="./assets/Screenshot 2026-10-21 223932.png" alt="Captura de pantalla de Postman - Organizer (403)" width="500" />
 </p>
 
-<h4>Current - Estado 200</h3>
 <p align="center">
-  <img src="./assets/current-200.png" alt="Current - Estado 200" width="500" />
+  <img src="./assets/Screenshot 2026-10-21 224000.png" alt="Captura de pantalla de Postman - Admin (201)" width="500" />
 </p>
-
-<h4>Logout</h3>
-<p align="center">
-  <img src="./assets/logout.png" alt="Logout" width="500" />
-</p>
-
-<h4>Current - Estado 401</h3>
-<p align="center">
-  <img src="./assets/current-401.png" alt="Current - Estado 401" width="500" />
-</p>
-
-TODO: agregar info sobre middleware de errores e implementacion de clase de errores propios
-// passportCall.js - es un middleware que creo para encapsular la lógica que trabaja en el rutedor al ejecutar los "return done" exitosos. aalí tambien capturo los posibles errores como fallas en la verificacion del token
-elimino auth.js
-nuevos tests y dependencias dev (supertest)

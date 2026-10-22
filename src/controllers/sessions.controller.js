@@ -7,12 +7,13 @@ export const sessionsController = {
     // GET /api/sessions/current
     getCurrentSession: async (req, res, next) => {
         try {
+            const userDTO = new UsersDTO(req.user);
 
             res.setHeader('Content-Type', 'application/json');
             return res.status(200).json({
                 status: 'success',
                 message: `Usuario actual: ${req.user.first_name} ${req.user.last_name}`,
-                payload: req.user
+                payload: userDTO
             });
 
         } catch (error) {
@@ -61,7 +62,7 @@ export const sessionsController = {
             const userPayload = { ...userDTO };
             const token = generateToken(userPayload);
 
-            req.cookie('currentUser', token, {
+            res.cookie('currentUser', token, {
                 httpOnly: true,
                 secure: config.general.NODE_ENV === 'production',
                 sameSite: 'lax',
@@ -69,7 +70,15 @@ export const sessionsController = {
                 path: '/'
             });
 
-            return res.redirect('http://localhost:3500/profile') //o al dashboard
+            res.setHeader('Content-Type', 'application/json');
+            return res.status(200).json({
+                status: 'success',
+                message: `Bienvenido ${req.user.first_name} ${req.user.last_name}`,
+                user: userPayload, // Devolver solo los campos necesarios usando DTO  
+            });
+
+            // REDIRECCIÓN en lugar de res.json:
+            //return res.redirect('http://localhost:3500/profile') //o al dashboard
 
         } catch (error) {
 

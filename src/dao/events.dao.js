@@ -50,5 +50,23 @@ export class EventsDAO {
         const newEvent = await eventModel.create(event);
         return newEvent.toJSON();
     }
+
+    // Actualizar un evento por ID
+    async update(id, updateData) {
+        // Usamos { new: true, runValidators: true } para que devuelva el documento actualizado y se ejecuten las validaciones del Schema de Mongoose.
+        return await eventModel.findByIdAndUpdate(id, updateData, {
+            new: true, //por defecto, Mongoose devuelve el documento antes de ser modificado. Con new = true me aseguro de que el servicio y el controlador reciban el evento ya actualizado.
+            runValidators: true // las validaciones de Mongoose (como mínimos de caracteres, enums, etc.) por defecto no corren en los updates. "runValidators: true" fuerza a que Mongoose valide los datos antes de guardarlos en la base de datos.
+        }).lean();
+    }
+
+    // Eliminar o cancelar lógicamente un evento por ID
+    async delete(id) {
+        // Opción A: Eliminación física en la base de datos
+        return await eventModel.findByIdAndDelete(id).lean();
+
+        // Opción B: cancelación lógica (cambiar status a 'cancelled' en vez de borrarlo:
+        // return await eventModel.findByIdAndUpdate(id, { status: 'cancelled' }, { new: true }).lean();
+    }
 }
 

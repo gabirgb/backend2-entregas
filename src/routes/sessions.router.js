@@ -13,9 +13,20 @@ router.post('/login', passportCall('login'), sessionsController.login);
 
 // Github App OAuth
 // 1. Redirección: passport.authenticate directo (sin scope en la llamada)
-router.get('/login/github', passport.authenticate('github', { session: false, failureRedirect: '/login' }))
+router.get(
+    '/login/github',
+    passport.authenticate('github',
+        {
+            session: false,
+            failureRedirect: '/login'
+        }
+    ))
+
 //2. Callback: passportCall para procesar el resultado de la estrategia
-router.get(config.github.CALLBACK_PATH, passportCall('github', { failureRedirect: '/' }, sessionsController.loginGithub))
+router.get(
+    config.github.CALLBACK_PATH,
+    passportCall('github', { failureRedirect: '/' }),
+    sessionsController.loginGithub)
 
 // logout sin passport
 router.get('/logout', sessionsController.logout);

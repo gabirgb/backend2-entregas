@@ -2,6 +2,7 @@ import { sanitizeInput } from "../utils/sanitizer.js";
 import { validateCreateUserData } from "../helpers/userValidator.js";
 import { hashPassword } from '../utils/crypto.js'
 import { UsersDTO } from "../dto/users.dto.js";
+import { USER_ROLE } from "../constants/users.constants.js";
 import { BadRequestError, ConflictError, NotFoundError } from "../utils/CustomError.js";
 
 // creo la clase
@@ -68,6 +69,7 @@ export class UsersServices {
             email: rawUserData.email.toLowerCase().trim(),
             password: hashedPassword,
             birth: rawUserData.birth,
+            role: USER_ROLE.USER, // Fuerzo q siempre sea role = 'user' por registro público
             isActive: rawUserData.isActive !== undefined ? rawUserData.isActive : true,
         }
 
