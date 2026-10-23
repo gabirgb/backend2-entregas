@@ -4,18 +4,18 @@ export class UsersDAO {
 
     async getAllUsers(queryOptions = {}) {
         const { first_name, last_name, email, role, isActive } = queryOptions;
-        const mongoQuery = {};
+        const filter = {};
 
         // 1. Búsqueda por nombre/ ape/ email/ (insensible a mayúsculas/minúsculas y parcial)
-        if (first_name) { mongoQuery.first_name = { $regex: first_name, $options: 'i' }; }
-        if (last_name) { mongoQuery.last_name = { $regex: last_name, $options: 'i' }; }
-        if (email) { mongoQuery.email = { $regex: email, $options: 'i' }; }
+        if (first_name) { filter.first_name = { $regex: first_name, $options: 'i' }; }
+        if (last_name) { filter.last_name = { $regex: last_name, $options: 'i' }; }
+        if (email) { filter.email = { $regex: email, $options: 'i' }; }
 
         // Búsquedas por valor exacto (enum y boolean)
-        if (role) { mongoQuery.role = role.toLowerCase(); }
-        if (isActive !== undefined) { mongoQuery.isActive = isActive === 'true'; }
+        if (role) { filter.role = role.toLowerCase(); }
+        if (isActive !== undefined) { filter.isActive = isActive === 'true'; }
 
-        return await userModel.find(mongoQuery).lean();
+        return await userModel.find(filter).lean();
     }
 
     // Busca un usuario por su ID de MongoDB

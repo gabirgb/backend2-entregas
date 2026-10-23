@@ -27,11 +27,9 @@ router.put(
     eventsController.updateEvent
 );
 
-// Cancelar / Eliminar evento
-router.delete(
-    '/:id',
+router.patch('/:id/status',
     passportCall('current'),
-    authorization('organizer', 'admin'),
-    verifyEventOwner(eventsService),
-    eventsController.deleteEvent
+    authorization('admin', 'organizer'),
+    verifyEventOwner(eventsService), // Valida que si es organizer, sea dueño del evento
+    eventsController.cancelEvent
 );

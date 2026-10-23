@@ -1,5 +1,5 @@
 import { sanitizeInput } from "../utils/sanitizer.js";
-import { validateEventHours, validateEventStartDate } from "../helpers/dateValidationRules.js";
+import { validateEventHours, validateEventStartDate, validateDateRange } from "../helpers/dateValidationRules.js";
 import { VALID_EVENT_STATUSES } from "../constants/events.constants.js";
 import { BadRequestError, NotFoundError } from "../utils/CustomError.js";
 
@@ -9,14 +9,51 @@ export class EventsServices {
     }
 
     getAllEvents = async (queryParams) => {
-        const events = await this.eventsDAO.getAllEvents(queryParams);
-        if (!events || events.length === 0) {
-            throw new NotFoundError('No hay resultados que coincidan con sus criterios de busqueda.');
+        // 1. Extraemos y sanitizamos/validamos los parámetros de paginación y orden
+        let { page, limit, sort, fromDate, toDate, status, ...otherFilters } = queryParams;
+
+        // Validar y normalizar 'page' (debe ser un entero positivo, por defecto 1)
+        const pageNumber = parseInt(page, 10);
+        const validPage = (!isNaN(pageNumber) && pageNumber > 0) ? pageNumber : 1;
+
+        // Validar y normalizar 'limit' (por defecto 10, con un tope máximo de seguridad por ejemplo 50)
+        const limitNumber = parseInt(limit, 10);
+        const validLimit = (!isNaN(limitNumber) && limitNumber > 0) ? Math.min(limitNumber, 50) : 10;
+
+        // Validar campos permitidos para el ordenamiento (evita inyecciones de sort en Mongoose)
+        const allowedSortFields = ['date', 'price', '-date', '-price', 'title', '-title', 'createdAt', '-createdAt'];
+        const validSort = allowedSortFields.includes(sort) ? sort : 'date';
+
+        // 2. Validaciones lógicas para rango de fechas si el usuario las envió
+        if (fromDate || toDate) {
+            const rangeValidation = validateDateRange(fromDate, toDate);
+            if (!rangeValidation.isValid) {
+                throw new BadRequestError('Los parámetros de fecha (fromDate / toDate) deben tener el formato YYYY-MM-DD y ser coherentes.');
+            }
         }
-        return events;
+
+        // 3. Reorganizamos el objeto limpio que viaja al DAO
+        const cleanQueryOptions = {
+            ...otherFilters,
+            fromDate,
+            toDate,
+            status,
+            page: validPage,
+            limit: validLimit,
+            sort: validSort
+        };
+
+        // 4. Llamamos al DAO pasándole los filtros ya validados
+        const result = await this.eventsDAO.getAllEvents(cleanQueryOptions);
+
+        // 5. Validación de resultados vacíos
+        if (!result || !result.docs || result.docs.length === 0) {
+            throw new NotFoundError('No hay resultados que coincidan con sus criterios de búsqueda.');
+        }
+
+        return result;
     }
 
-    //TODO: filtrar los eventos por fecha (implementar fromDate y toDate)
 
     getEventById = async (id) => {
         const event = await this.eventsDAO.getById(id);
@@ -28,7 +65,7 @@ export class EventsServices {
 
     createEvent = async (rawEventData, userId) => {
         //1. desestructuro propiedades para hacer la validacion de c/u, uso LET para poder reasignarles valor luego de la sanitizacion
-        let { code, title, description, date, startTime, endTime, location, category, artist, thumbnail, price, totalTickets, status } = rawEventData;
+        let { code, title, description, fromDate, toDate, startTime, endTime, location, category, artist, thumbnail, price, capacity, status } = rawEventData;
 
         // Sanitizo manualmente
         code = sanitizeInput(code);
@@ -41,28 +78,42 @@ export class EventsServices {
         status = sanitizeInput(status);
 
         //2. valido campos obligatorios
-        if (!code || !title || !description || !artist || !category || !location || !price || !totalTickets) {
-            throw new BadRequestError('Faltan datos obligatorios');
+        if (!code || !title || !description || !artist || !category || !location || !price || !capacity || !fromDate) {
+            throw new BadRequestError('Faltan datos obligatorios: code, title, description, artist, category, location, price, capacity, fromDate.');
         }
 
         //3. Valido tipo de datos y errores logicos
-        if (typeof price !== 'number' || typeof totalTickets !== 'number' || totalTickets < 0) {
-            throw new BadRequestError('El precio y la cantidad de tickets deben ser números. El stock no pueden ser negativo');
+        if (typeof price !== 'number' || typeof capacity !== 'number' || capacity <= 0 || price < 0) {
+            throw new BadRequestError('El precio y la capacidad del espacio deben ser números. La capacidad no pueden ser negativa.');
         }
 
         if (status && !VALID_EVENT_STATUSES.includes(status.toLowerCase())) {
             throw new BadRequestError(`El estado ${status} no es válido. Opciones permitidas: ${VALID_EVENT_STATUSES.join(', ')}`);
         }
 
-        // 4. Validar fecha (si viene informada)
-        if (date) {
-            const dateValidation = validateEventStartDate(date);
-            if (!dateValidation.isValid) {
-                throw new BadRequestError('La fecha del evento no es válida.');
+        // 4. Validar fechas
+        if (fromDate) {
+            const fromDateValidation = validateEventStartDate(fromDate);
+            if (!fromDateValidation.isValid) {
+                throw new BadRequestError('La fecha de comienzo del evento no es válida.');
             }
         }
 
-        // 4b. Validar horarios (si vienen informados startTime y/or endTime)
+        if (toDate) {
+            const toDateValidation = validateEventStartDate(toDate);
+            if (!toDateValidation.isValid) {
+                throw new BadRequestError('La fecha de finalizacion del evento no es válida.');
+            }
+        }
+
+        // 4b. Validar que la fecha de fin sea posterior o igual a la de inicio (formato ISO)
+        if (toDate) {
+            if (new Date(toDate) < new Date(fromDate)) {
+                throw new BadRequestError('La fecha de finalización debe ser posterior o igual a la fecha de inicio.');
+            }
+        }
+
+        // 4c. Validar horarios (si vienen informados startTime y/or endTime)
         if (startTime || endTime) {
             const hoursValidation = validateEventHours(startTime, endTime);
             if (!hoursValidation.isValid) {
@@ -75,7 +126,8 @@ export class EventsServices {
             code,
             title,
             description,
-            ...(date && { date: new Date(date) }),
+            ...(fromDate && { fromDate: new Date(fromDate) }),
+            ...(toDate && { toDate: new Date(toDate) }),
             ...(startTime && { startTime }),
             ...(endTime && { endTime }),
             location,
@@ -83,9 +135,9 @@ export class EventsServices {
             artist,
             thumbnail,
             price,
-            totalTickets,
+            capacity,
             status,
-            organizerId: userId // acá guardo el ID del usuario que creó el evento
+            organizer: userId // acá guardo el ID del usuario que creó el evento
         };
 
         return await this.eventsDAO.create(cleanEventData);
@@ -93,15 +145,39 @@ export class EventsServices {
     }
 
     // Actualizacion de eventos
+    // Actualizacion de eventos
     updateEvent = async (id, rawUpdateData) => {
 
-        // 1. Evitamos que modifiquen el código único de Mongoose por seguridad
+        // 1. Buscamos el evento actual en la base de datos para comparar su estado y datos previos
+        const existingEvent = await this.eventsDAO.getById(id);
+        if (!existingEvent) {
+            throw new NotFoundError(`No se encontró el evento con id ${id}`);
+        }
+
+        // Regla: No se puede editar un evento si ya está finalizado o cancelado
+        if (existingEvent.status === 'finished') {
+            throw new BadRequestError('No se puede editar un evento que ya ha finalizado.');
+        }
+
+        if (existingEvent.status === 'cancelled') {
+            throw new BadRequestError('No se puede editar un evento que se encuentra cancelado.');
+        }
+
+        // 2. Evitamos que modifiquen el código único de Mongoose por seguridad
         delete rawUpdateData.code;
 
-        // 2. En este obj voy a acumular los datos limpios a actualizar
+        // 3. En este obj voy a acumular los datos limpios a actualizar
         const cleanUpdateData = {};
 
-        // 3. Sanitización y validación condicional de campos recibidos
+        // 4. Sanitización y validación condicional de campos recibidos
+        if (rawUpdateData.status !== undefined) {
+            const sanitizedStatus = sanitizeInput(rawUpdateData.status).toLowerCase();
+            if (!VALID_EVENT_STATUSES.includes(sanitizedStatus)) {
+                throw new BadRequestError(`Estado no válido. Opciones permitidas: ${VALID_EVENT_STATUSES.join(', ')}`);
+            }
+            cleanUpdateData.status = sanitizedStatus;
+        }
+
         if (rawUpdateData.title !== undefined) {
             cleanUpdateData.title = sanitizeInput(rawUpdateData.title);
             if (cleanUpdateData.title.length < 3) {
@@ -116,6 +192,13 @@ export class EventsServices {
             }
         }
 
+        if (rawUpdateData.location !== undefined) {
+            cleanUpdateData.location = sanitizeInput(rawUpdateData.location);
+            if (cleanUpdateData.location.length < 2) {
+                throw new BadRequestError('La ubicación debe tener al menos 2 caracteres');
+            }
+        }
+
         if (rawUpdateData.price !== undefined) {
             if (typeof rawUpdateData.price !== 'number' || rawUpdateData.price < 0) {
                 throw new BadRequestError('El precio debe ser un número positivo');
@@ -123,29 +206,47 @@ export class EventsServices {
             cleanUpdateData.price = rawUpdateData.price;
         }
 
-        if (rawUpdateData.totalTickets !== undefined) {
-            if (!Number.isInteger(rawUpdateData.totalTickets) || rawUpdateData.totalTickets < 0) {
-                throw new BadRequestError('La cantidad de tickets debe ser un número entero mayor o igual a cero');
+        // Validación de capacidad y control contra inscriptos existentes
+        if (rawUpdateData.capacity !== undefined) {
+            if (!Number.isInteger(rawUpdateData.capacity) || rawUpdateData.capacity <= 0) {
+                throw new BadRequestError('La capacidad debe ser un número entero mayor a cero.');
             }
-            cleanUpdateData.totalTickets = rawUpdateData.totalTickets;
-        }
 
-        if (rawUpdateData.status !== undefined) {
-            const sanitizedStatus = sanitizeInput(rawUpdateData.status).toLowerCase();
-            if (!VALID_EVENT_STATUSES.includes(sanitizedStatus)) {
-                throw new BadRequestError(`Estado no válido. Opciones permitidas: ${VALID_EVENT_STATUSES.join(', ')}`);
+            // Consultamos cuántos inscriptos reales tiene el evento actualmente
+            const currentRegistrationsCount = await this.registrationDAO.countByEvent(id);
+
+            // REGLA: No reducir la capacidad por debajo de los ya inscriptos
+            if (rawUpdateData.capacity < currentRegistrationsCount) {
+                throw new BadRequestError(`No se puede reducir la capacidad a ${rawUpdateData.capacity} porque ya hay ${currentRegistrationsCount} usuarios inscriptos.`);
             }
-            cleanUpdateData.status = sanitizedStatus;
+
+            cleanUpdateData.capacity = rawUpdateData.capacity;
         }
 
-        // Validaciones de fechas y horas si se envían...
-        if (rawUpdateData.date) {
-            const dateValidation = validateEventStartDate(rawUpdateData.date);
-            if (!dateValidation.isValid) throw new BadRequestError('La fecha del evento no es válida.');
-            cleanUpdateData.date = new Date(rawUpdateData.date);
+        // Validaciones de fechas ISO con hora al actualizar
+        if (rawUpdateData.fromDate) {
+            const fromDateValidation = validateEventStartDate(rawUpdateData.fromDate);
+            if (!fromDateValidation.isValid) throw new BadRequestError('La fecha de comienzo no es válida.');
+            cleanUpdateData.fromDate = new Date(rawUpdateData.fromDate);
         }
 
-        // 4. Ejecutamos la actualización en el DAO pasando { new: true, runValidators: true }
+        if (rawUpdateData.toDate) {
+            const toDateValidation = validateEventStartDate(rawUpdateData.toDate);
+            if (!toDateValidation.isValid) throw new BadRequestError('La fecha de finalización no es válida.');
+            cleanUpdateData.toDate = new Date(rawUpdateData.toDate);
+        }
+
+        // Validación lógica de rango con fechas ISO (toDate >= fromDate)
+        const finalFromDate = rawUpdateData.fromDate || existingEvent.fromDate;
+        const finalToDate = rawUpdateData.toDate || existingEvent.toDate;
+
+        if (finalToDate && finalFromDate) {
+            if (new Date(finalToDate) < new Date(finalFromDate)) {
+                throw new BadRequestError('La fecha de finalización debe ser posterior o igual a la fecha de inicio.');
+            }
+        }
+
+        // 5. Ejecutamos la actualización en el DAO
         const updatedEvent = await this.eventsDAO.update(id, cleanUpdateData);
 
         if (!updatedEvent) {
@@ -155,11 +256,31 @@ export class EventsServices {
         return updatedEvent;
     }
 
-    deleteEvent = async (id) => {
-        const deleted = await this.eventsDAO.delete(id); // o cancelación lógica cambiando status a 'cancelled'
-        if (!deleted) throw new NotFoundError(`No se pudo eliminar el evento con id ${id}`);
-        return deleted;
-    }
+    cancelEvent = async (id, userId, userRole) => {
+        // 1. Buscamos el evento actual en la base de datos
+        const event = await this.eventsDAO.getById(id);
+        if (!event) {
+            throw new NotFoundError(`No se encontró el evento con id ${id}`);
+        }
 
+        // 2. REGLA: Impedir cancelar eventos que ya finalizaron
+        if (event.status === 'finished') {
+            throw new BadRequestError('No se puede cancelar un evento que ya ha finalizado.');
+        }
+
+        // 3. (Opcional extra de seguridad) Validar permisos si el middleware no lo cubriera:
+        // Si no es admin y el usuario logueado no coincide con el organizador del evento
+        const isOwner = event.organizer.toString() === userId.toString();
+        const isAdmin = userRole === 'admin';
+
+        if (!isAdmin && !isOwner) {
+            throw new ForbiddenError('No tienes permisos para cancelar este evento.');
+        }
+
+        // 4. REGLA: Cambiar el estado a 'cancelled' (no se elimina físicamente)
+        const updatedEvent = await this.eventsDAO.update(id, { status: 'cancelled' });
+
+        return updatedEvent;
+    }
 
 }

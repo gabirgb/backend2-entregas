@@ -24,21 +24,27 @@ const eventSchema = new mongoose.Schema(
             minLength: [10, "La cantidad min de caracteres es 10. Ud ingresó {VALUE}"],
             trim: true
         },
-        date: {
+        location: {
+            type: String,
+            required: [true, "La ubicación es obligatoria"],
+            minLength: [10, "La cantidad min de caracteres es de 10. Ustes ingresó {VALUE}"],
+            trim: true
+        },
+        fromDate: {
             type: Date,
+            required: [true, "La fecha es obligatoria."],
             validate: {
                 // Valida que la fecha del evento no sea en el pasado
                 validator: function (value) {
                     return value > new Date();
                 },
                 message: 'La fecha del evento debe ser posterior a la fecha actual.',
-            },
+            }
         },
-        location: {
-            type: String,
-            required: [true, "La ubicación es obligatoria"],
-            minLength: [10, "La cantidad min de caracteres es de 10. Ustes ingresó {VALUE}"],
-            trim: true
+        toDate: {
+            type: Date,
+            // es de caracter opcional (no req): si no viene, se entiende que el evento es de un solo día
+            default: null,
         },
         startTime: {
             type: String,
@@ -52,6 +58,16 @@ const eventSchema = new mongoose.Schema(
             type: String,
             required: [true, "La categoría es obligatoria"],
             trim: true
+        },
+        // También puede referir a un documento de otra coleccion, por ej:
+        //category: {
+        //   type: mongoose.Schema.Types.ObjectId,
+        //   ref: 'Category',
+        //   required: true
+        // },
+        level: {
+            type: String,
+            enum: ['inicial', 'avanzado', 'experto']
         },
         artist: {
             type: String,
@@ -69,10 +85,10 @@ const eventSchema = new mongoose.Schema(
             required: [true, "El precio es obligatorio"],
             min: [0, "El precio debe ser un numero positivo mayor o igual a cero, Usted ingresó {VALUE}"],
         },
-        totalTickets: {
+        capacity: {
             type: Number,
-            required: [true, "La cantidad de tickets a vender es obligatorio."],
-            min: [0, "La cantidad de tickets no puede ser negativa. Usted ingresó {VALUE}"],
+            required: [true, "La capacidad del espacio es obligatoria."],
+            min: [1, "La cpacidad del espacio no puede ser negativa. Usted ingresó {VALUE}"],
             validate: {
                 //validar que sea un número entero
                 validator: Number.isInteger, //validador de num enteros que trae por defecto Mongoose, así como este hay muchos otros validadores que trae x default...
@@ -93,6 +109,11 @@ const eventSchema = new mongoose.Schema(
             default: EVENT_STATUS.DRAFT, // Por defecto se crea en borrador
             lowercase: true,  // Convierte automáticamente el string a minúsculas
         },
+        organizer: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+            required: [true, "La info del organizador es obligatoria."],
+        }
     },
     {
         timestamps: true, // Crea automáticamente createdAt y updatedAt

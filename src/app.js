@@ -9,6 +9,7 @@ import { router as eventsRouter } from './routes/events.router.js';
 import { router as usersRouter } from './routes/users.router.js';
 import { router as sessionsRouter } from './routes/sessions.router.js';
 import { router as adminRouter } from './routes/admin.router.js';
+import { router as registrationsRouter } from "./routes/registrations.router.js";
 
 //middlewares
 import { errorHandler } from './middlewares/errorHandler.js';
@@ -48,12 +49,13 @@ app.use('/api/events', eventsRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/sessions', sessionsRouter);
 app.use('/api/admin', adminRouter);
+app.use("/api/registrations", registrationsRouter);
 
 // ENDPOINTS BASICOS
 //-home
 app.get('/', (req, res) => {
     res.setHeader('Content-type', 'text/html');
-    res.status(200).send('<h1>Bienvenido a mi app de Venta de Tickets para Talleres y Cursos.</h1>');
+    res.status(200).send('<h1>Bienvenido a mi app de venta de entradas para Talleres y Cursos.</h1>');
 });
 
 app.get(

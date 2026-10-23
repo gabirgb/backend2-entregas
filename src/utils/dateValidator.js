@@ -18,6 +18,23 @@ export const isValidSimpleDate = (dateString) => {
     );
 };
 
+// Valida que la fecha de fin sea posterior o igual a la fecha de inicio. Recibe las dos fechas y devuelve true o false.
+export const isValidDateRange = (fromDateString, toDateString) => {
+    // Si no se envía fecha de fin, asumimos que es un evento de un solo día (válido)
+    if (!toDateString) return true;
+
+    // Validamos que ambos strings tengan formato de fecha simple válido (YYYY-MM-DD)
+    if (!isValidSimpleDate(fromDateString) || !isValidSimpleDate(toDateString)) {
+        return false;
+    }
+
+    const start = new Date(fromDateString);
+    const end = new Date(toDateString);
+
+    // La fecha de fin debe ser mayor o igual a la de inicio
+    return end >= start;
+};
+
 // Valida formato ISO 8601 completo con hora y offset/Z
 export const isISO8601Date = (dateString) => {
     const isoRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?(Z|[+-]\d{2}:\d{2})$/;

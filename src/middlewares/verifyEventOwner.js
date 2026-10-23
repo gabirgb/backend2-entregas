@@ -7,7 +7,7 @@ export const verifyEventOwner = (eventsService) => {
             const user = req.user; // Inyectado por passportCall('current')
 
             // 1. Buscamos el evento existente
-            const event = await eventsService.getEventById(id);
+            const event = await eventsService.getEventById(id); // Trae el evento plano
             if (!event) {
                 throw new NotFoundError(`Evento con id ${id} no encontrado`);
             }
@@ -20,7 +20,7 @@ export const verifyEventOwner = (eventsService) => {
 
             // 3. Si es ORGANIZER, verificamos que sea el dueño
             // (Asegurate de comparar como String si usás ObjectId de Mongoose)
-            const isOwner = event.organizerId?.toString() === user._id?.toString();
+            const isOwner = event.organizer?.toString() === user._id?.toString();
 
             if (!isOwner) {
                 return next(new ForbiddenError('No tienes permisos para modificar o cancelar este evento porque no eres el creador'));

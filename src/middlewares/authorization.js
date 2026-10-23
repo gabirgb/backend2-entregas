@@ -11,7 +11,7 @@ export const authorization = (...permisos) => {
 
         //2. evalúo si el rol del usuario (req.user.role) está incluido en los permisos permitidos (permisos) y normalizo el rol a minúsculas por seguridad
         const userRole = req.user.role ? req.user.role.toLowerCase() : '';
-        const permisosNormalizados = permisos.map(p => p.toLowerCase());
+        const permisosNormalizados = permisos.flat().map(p => typeof p === 'string' ? p.toLowerCase() : '');
 
         // 3. Evaluamos si el rol está incluido en los permisos permitidos
         if (!permisosNormalizados.includes(userRole)) {

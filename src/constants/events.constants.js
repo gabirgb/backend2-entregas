@@ -4,6 +4,7 @@ export const EVENT_STATUS = Object.freeze({
     PRESALE: 'presale',
     PUBLISHED: 'published',
     CANCELLED: 'cancelled',
+    FINISHED: 'finished',
 })
 
 // Extraigo la lista de valores válidos en un Array

@@ -8,13 +8,21 @@ export class EventsController {
     getEvents = async (req, res, next) => {
         try {
             // pido los eventos al DAO pasándole los query params de la URL
-            const events = await this.eventsService.getAllEvents(req.query);
+            const result = await this.eventsService.getAllEvents(req.query);
 
             // si hay eventos devuelvo la rta exitosa
             res.setHeader('Content-type', 'application/json');
             res.status(200).json({
                 status: 'success',
-                payload: events
+                payload: result.docs, // Los eventos de la página actual
+                pagination: { // Los metadatos de paginación
+                    totalDocs: result.totalDocs,
+                    limit: result.limit,
+                    page: result.page,
+                    totalPages: result.totalPages,
+                    hasNextPage: result.hasNextPage,
+                    hasPrevPage: result.hasPrevPage
+                }
             });
 
         } catch (error) {
@@ -81,20 +89,22 @@ export class EventsController {
         }
     }
 
-    deleteEvent = async (req, res, next) => {
+    cancelEvent = async (req, res, next) => {
         try {
             const { id } = req.params;
-            await this.eventsService.deleteEvent(id);
+            const userId = req.user._id;   // Inyectado por passport
+            const userRole = req.user.role; // Inyectado por passport
 
-            res.setHeader('Content-type', 'application/json');
-            return res.status(200).json({
+            const cancelledEvent = await this.eventsService.cancelEvent(id, userId, userRole);
+
+            res.status(200).json({
                 status: 'success',
-                message: 'Evento cancelado/eliminado exitosamente'
+                message: 'El evento ha sido cancelado exitosamente.',
+                payload: cancelledEvent
             });
         } catch (error) {
             next(error);
         }
     }
-
 
 }
