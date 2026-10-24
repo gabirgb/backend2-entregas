@@ -15,6 +15,7 @@
 <li>Passport-JWT</li>
 <li>Passport-local</li>
 <li>Passport-Github2</li>
+<li>Nodemailer</li>
 </ul>
 
 <h5>🏢 Arquitectura</h5>
@@ -33,7 +34,7 @@
 src/<br />
 ├── app.js<br />
 ├── server.js<br />
-├── config/        # Configuración de entorno, Passport y DB<br />
+├── config/        # Configuración de entorno, Passport, DB y Nodemailer<br />
 ├── constants/     # Enums y constantes globales<br />
 ├── controllers/   # Capa de Presentación (Manejo de req/res)<br />
 ├── dao/           # Objetos de Acceso a Datos (Persistencia)<br />
@@ -45,7 +46,7 @@ src/<br />
 ├── repositories/  # Patrón Repositorio (abstracción sobre DAOs)<br />
 ├── routes/        # Definición de endpoints y rutas<br />
 ├── services/      # Capa de Lógica de Negocio<br />
-└── utils/         # Utilidades generales (logger, BCrypt, etc.)<br />
+└── utils/         # Utilidades generales (logger, BCrypt, mailer services, etc.)<br />
 tests/             # Pruebas y testing<br />
 ├── .env.example<br />
 ├── .gitignore<br />
@@ -65,6 +66,11 @@ tests/             # Pruebas y testing<br />
 <strong>CLIENT_SECRET:</strong> Clave privada de aplicación en GitHub.<br/>
 <strong>CLIENT_ID:</strong> ID público de aplicación en GitHub.<br/>
 <strong>USER_AGENT:</strong> Nombre del proyecto para GitHub App.<br/>
+<strong>MAIL_HOST:</strong> Servidor SMTP para el envío de correos (ej: sandbox.smtp.mailtrap.io)<br/>
+<strong>MAIL_PORT:</strong> Puerto del servidor SMTP (ej: 2525 o 587)<br/>
+<strong>MAIL_USER:</strong> Usuario de autenticación SMTP<br/>
+<strong>MAIL_PASS:</strong> Contraseña de autenticación SMTP<br/>
+<strong>MAIL_FROM:</strong> Remitente por defecto de los correos (ej: Eventeala Soporte &lt;no-reply@eventeala.com&gt;)<br/>
 
 <h5>🔐 Sistema de Roles y Matriz de Permisos</h5>
 <p>El modelo de usuario incluye el campo <code>role</code> con los valores permitidos: <code>user</code>, <code>organizer</code> y <code>admin</code> (por defecto: <code>user</code>). El registro público fuerza automáticamente el rol a <code>user</code> para evitar la inyección ilícita de roles elevados desde el cliente.</p>
@@ -104,19 +110,25 @@ tests/             # Pruebas y testing<br />
       <td align="center">✅ Sí</td>
     </tr>
     <tr>
-      <td>Inscribirse a eventos (<code>POST /api/registrations</code>)</td>
+      <td>Inscribirse a eventos (<code>POST /api/registrations/events/:eid</code>)</td>
       <td align="center">✅ Sí</td>
       <td align="center">✅ Sí</td>
       <td align="center">✅ Sí</td>
     </tr>
     <tr>
-      <td>Cancelar inscripción propia (<code>DELETE /api/registrations/:id</code>)</td>
+      <td>Ver inscripciones de un evento (<code>GET /api/registrations/events/:eid</code>)</td>
+      <td align="center">❌ No</td>
+      <td align="center">✅ Sí (dueño)</td>
+      <td align="center">✅ Sí</td>
+    </tr>
+    <tr>
+      <td>Cancelar inscripción propia (<code>PATCH /api/registrations/:tid/cancel</code>)</td>
       <td align="center">✅ Sí</td>
       <td align="center">✅ Sí</td>
       <td align="center">✅ Sí</td>
     </tr>
     <tr>
-      <td>Modificar / cancelar <b>cualquier</b> evento</td>
+      <td>Modificar / cancelar <b>cualquier</b> evento o registro</td>
       <td align="center">❌ No</td>
       <td align="center">❌ No</td>
       <td align="center">✅ Sí</td>
@@ -133,9 +145,9 @@ tests/             # Pruebas y testing<br />
 <h5>🚨 Manejo Explícito de Errores</h5>
 <p>La API distingue estrictamente los códigos de respuesta de autorización y validación:</p>
 <ul>
-  <li><b>HTTP 400 Bad Request:</b> Errores de formato (fechas no ISO, horas con formato inválido), falta de datos obligatorios o violaciones de reglas de negocio (evento sin cupo, intento de editar evento cancelado/finalizado).</li>
-  <li><b>HTTP 401 Unauthorized:</b> No hay una sesión activa o válida (falta el token JWT en la cookie <code>currentUser</code>, expiró o credenciales erróneas).</li>
-  <li><b>HTTP 403 Forbidden:</b> Existe sesión pero el usuario no posee el rol o la propiedad sobre el recurso (ej. un <code>organizer</code> intentando editar un evento ajeno).</li>
+  <li><b>HTTP 400 Bad Request:</b> Errores de formato (fechas no ISO, horas con formato inválido), falta de datos obligatorios o violaciones de reglas de negocio (evento sin cupo, intento de editar evento cancelado/finalizado, inscripción duplicada activa).</li>
+  <li><b>HTTP 401 Unauthorized:</b> No hay una sesión activa o válida (falta el token JWT en la cookie, expiró o credenciales erróneas).</li>
+  <li><b>HTTP 403 Forbidden:</b> Existe sesión pero el usuario no posee el rol o la propiedad sobre el recurso (ej. un <code>organizer</code> intentando editar un evento ajeno o ver inscripciones sin ser dueño).</li>
   <li><b>HTTP 404 Not Found:</b> El ID consultado no existe en la base de datos o no coincide con ningún recurso.</li>
 </ul>
 
@@ -150,15 +162,20 @@ tests/             # Pruebas y testing<br />
   </li>
   <li><b>Control de Capacidad e Inscripciones:</b>
     <ul>
-      <li>Índice compuesto único en Mongoose (<code>user</code> + <code>event</code>) que impide duplicar inscripciones.</li>
-      <li>Se valida el cupo disponible (<code>capacity</code>) antes de registrar a un usuario.</li>
+      <li>Índice compuesto único en Mongoose (<code>user</code> + <code>event</code>) que impide duplicar inscripciones activas.</li>
+      <li>Se valida el cupo disponible (<code>capacity</code>) restando únicamente las inscripciones con estado activo (las canceladas no ocupan cupo).</li>
       <li>Al actualizar un evento, la capacidad no se puede reducir a un número menor que la cantidad de usuarios inscriptos activos.</li>
     </ul>
   </li>
   <li><b>Inmutabilidad de Eventos Inactivos:</b>
     <ul>
       <li>No se permite editar (<code>PUT</code>) ni re-cancelar eventos que tengan estado <code>finished</code> o <code>cancelled</code>.</li>
-      <li>La cancelación es lógica (<code>status: "cancelled"</code>), sin borrado físico en la base de datos.</li>
+      <li>La cancelación de eventos e inscripciones es lógica (<code>status: "cancelled"</code>), sin borrado físico en la base de datos.</li>
+    </ul>
+  </li>
+  <li><b>Notificaciones por Correo (Nodemailer):</b>
+    <ul>
+      <li>Al registrarse exitosamente a un evento, el sistema genera un código de reserva único (<code>codigoReserva</code>) y envía automáticamente un correo de confirmación al email del usuario utilizando Nodemailer y plantillas HTML.</li>
     </ul>
   </li>
   <li><b>Propiedad de Recursos:</b>
@@ -202,25 +219,6 @@ tests/             # Pruebas y testing<br />
     <ul>
       <li><b>Rol requerido:</b> <code>organizer</code> o <code>admin</code>.</li>
       <li><b>Descripción:</b> Crea un nuevo evento. El organizador se asocia automáticamente a la sesión del usuario.</li>
-      <li><b>Body de ejemplo:</b>
-<pre>json
-{<br />
-  "code": "S011",<br />
-  "title": "Taller de Node.js Avanzado",<br />
-  "description": "Aprende arquitectura en capas y Mongoose.",<br />
-  "location": "Aulas Coderhouse",<br />
-  "category": "Educacion",<br />
-  "artist": "Profe Backend",<br />
-  "fromDate": "2027-01-15T20:00:00Z",<br />
-  "toDate": "2027-01-15T23:00:00Z",<br />
-  "startTime": "20:00",<br />
-  "endTime": "23:00",<br />
-  "price": 10000,<br />
-  "capacity": 50,<br />
-  "status": "published"<br />
-}
-</pre>
-      </li>
     </ul>
   </li>
   <li>
@@ -239,18 +237,18 @@ tests/             # Pruebas y testing<br />
   </li>
 </ul>
 
-<h6>2. Entidad Inscripciones (<code>/api/registrations</code>)</h6>
+<h6>2. Entidad Inscripciones y Tickets (<code>/api/registrations</code>)</h6>
 
 <ul>
   <li>
-    <code>POST /api/registrations</code>
+    <code>POST /api/registrations/events/:eid</code>
     <ul>
       <li><b>Rol requerido:</b> <code>user</code>, <code>organizer</code> o <code>admin</code>.</li>
-      <li><b>Descripción:</b> Registra la inscripción del usuario logueado a un evento activo. Se valida cupo y duplicados.</li>
+      <li><b>Descripción:</b> Registra la inscripción del usuario logueado a un evento activo. Valida cupos, duplicados activos, genera un código de reserva único y envía email de confirmación vía Nodemailer.</li>
       <li><b>Body de ejemplo:</b>
 <pre>json
 {
-  "eventId": "654a12345678901234567890"
+  "quantity": 1
 }
 </pre>
       </li>
@@ -260,14 +258,21 @@ tests/             # Pruebas y testing<br />
     <code>GET /api/registrations/my-registrations</code>
     <ul>
       <li><b>Rol requerido:</b> Usuario autenticado.</li>
-      <li><b>Descripción:</b> Lista todas las inscripciones del usuario en sesión.</li>
+      <li><b>Descripción:</b> Lista todas las inscripciones del usuario en sesión con populate de los datos del evento.</li>
     </ul>
   </li>
   <li>
-    <code>DELETE /api/registrations/:id</code>
+    <code>GET /api/registrations/events/:eid</code>
+    <ul>
+      <li><b>Rol requerido:</b> <code>organizer</code> (dueño del evento) o <code>admin</code>.</li>
+      <li><b>Descripción:</b> Lista todas las inscripciones asociadas a un evento específico.</li>
+    </ul>
+  </li>
+  <li>
+    <code>PATCH /api/registrations/:tid/cancel</code>
     <ul>
       <li><b>Rol requerido:</b> Dueño de la inscripción o <code>admin</code>.</li>
-      <li><b>Descripción:</b> Cancela una inscripción y libera un cupo en el evento.</li>
+      <li><b>Descripción:</b> Realiza una cancelación lógica de la inscripción (cambia estado a <code>cancelled</code> y registra <code>cancelledAt</code>) liberando automáticamente el cupo en el evento.</li>
     </ul>
   </li>
 </ul>
@@ -341,3 +346,29 @@ Esperado: 200 OK (demuestra acceso total del administrador).</p>
 <p>Intentar editar un evento que se encuentra en estado cancelled o finished.<br />
 Esperado: Error 400 Bad Request (No se puede editar un evento que ya ha finalizado/cancelado).</p>
 <img src="./assets/Screenshot 2026-10-23 002420.png" alt="Captura de pantalla de Postman - Reglas de Negocio" width="500" />
+
+<h3>Registro a eventos e Emails de confirmación usando NodeMailer</h3>
+
+<h2>Registro al evento</h2>
+<p>Inscripcion a un evento autenticado con rol user.<br />
+Esperado: 200 OK </p>
+<img src="./assets/Screenshot 2026-10-23 222509.png" alt="Captura de pantalla de Postman - Registro al evento" width="500" />
+
+<h2>Validación de registro duplicado</h2>
+<p>EL usuario no se puede inscribir más de una vez al mismo evento.<br />
+Esperado: Error 400 Bad Request (indicando que el usuario ya se encuentra inscripto y activo en este evento)</p>
+<img src="./assets/Screenshot 2026-10-23 222529.png" alt="Captura de pantalla de Postman - Validación de registro duplicado" width="500" />
+
+<h2>Consultar mis inscripciones</h2>
+<p>El usuario puede ver sus inscripciones activas junto con los datos del evento mediante el 'populate'.<br />
+Esperado: 200 OK</p>
+<img src="./assets/Screenshot 2026-10-23 222639.png" alt="Captura de pantalla de Postman - Consultar mis inscripciones" width="500" />
+
+<h2>Cancelación lógica y liberación de cupo</h2>
+<p>El usuario puede cancelar su inscripción.<br />
+Esperado: 200 OK (indicando que la inscripción fue cancelada correctamente y el cupo liberado).</p>
+<img src="./assets/Screenshot 2026-10-23 222748.png" alt="Captura de pantalla de Postman - Cancelación lógica y liberación de cupo" width="500" />
+
+<h2>Notificaciones por email</h2>
+<p>El usuario recibe las notificaciones vía email cuando se registra o cancela su participación en un evento.</p>
+<img src="./assets/Screenshot 2026-10-23 231121.png" alt="Captura de pantalla de Mailtrap - Notificaciones por email" width="500" />

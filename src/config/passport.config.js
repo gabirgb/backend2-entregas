@@ -96,7 +96,7 @@ export const inicializarPassport = (req) => {
         },
         async (accessToken, refreshToken, profile, done) => {
             try {
-                console.log('Llegó a la estrategia');
+                //console.log('Llegó a la estrategia');
                 const email = profile.emails?.[0]?.value || profile._json?.email || `${profile.username}@github.com`;
 
                 let user = null;

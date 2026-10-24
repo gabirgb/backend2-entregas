@@ -1,4 +1,5 @@
 // Punto de entrada para levantar el servicio
+import 'dotenv/config';
 import app from './app.js';
 import { config } from './config/config.js';
 import { connDB } from './config/db.js';

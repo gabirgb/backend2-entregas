@@ -44,3 +44,9 @@ export class ConflictError extends CustomError {
     }
 }
 
+export class EmailError extends CustomError {
+    constructor(message = 'Error al enviar el correo') {
+        super(message, 500, 'Error de servidor');
+    }
+}
+

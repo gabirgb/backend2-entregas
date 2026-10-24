@@ -10,7 +10,7 @@ export const errorHandler = (err, req, res, next) => {
     const currentEnv = config.general.NODE_ENV?.trim().toLowerCase();
 
     if (currentEnv !== 'production') {
-        console.error("DEBUG ERROR HANDLER ->", err);
+        //console.error("DEBUG ERROR HANDLER ->", err);
 
         return res.status(statusCode).json({
             status: 'error',

@@ -51,7 +51,7 @@ export const sessionsController = {
 
     loginGithub: async (req, res, next) => {
         try {
-            console.log('Usuario recibido de passport: ', req.user);
+            //console.log('Usuario recibido de passport: ', req.user);
             const userData = {
                 ...req.user,
                 first_name: req.user.first_name || req.user.name || req.user.username,

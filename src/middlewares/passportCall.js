@@ -9,14 +9,14 @@ export const passportCall = (strategy, options = {}) => {
     }
 
     return (req, res, next) => {
-        console.log('Query recibida en callback:', req.query);
+        //console.log('Query recibida en callback:', req.query);
 
         passport.authenticate(strategy, defaultOptions,
             (err, user, info) => {
-                console.log('2. Callback interno de Passport ejecutado:');
-                console.log('   - Error:', err);
-                console.log('   - User:', user);
-                console.log('   - Info:', info);
+                //console.log('2. Callback interno de Passport ejecutado:');
+                //console.log('   - Error:', err);
+                //console.log('   - User:', user);
+                //console.log('   - Info:', info);
 
                 // 1. Error técnico o de BD -> va al errorHandler
                 if (err) return next(err);

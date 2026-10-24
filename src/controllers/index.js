@@ -18,7 +18,7 @@ export const registrationDAO = new RegistrationDAO();
 // instancio los servicios
 export const eventsService = new EventsServices(eventsDAO);
 export const usersService = new UsersServices(usersDAO);
-export const registrationService = new RegistrationServices(registrationDAO, eventsDAO);
+export const registrationService = new RegistrationServices(registrationDAO, eventsDAO, usersDAO);
 
 // instancio los controladores
 export const eventsController = new EventsController(eventsService);

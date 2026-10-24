@@ -3,17 +3,18 @@ export class RegistrationsController {
         this.registrationService = registrationService;
     }
 
-    // Inscribir al usuario logueado a un evento
+    // 1. Inscribir al usuario logueado a un evento (POST /api/events/:eid/registrations)
     registerUserToEvent = async (req, res, next) => {
         try {
-            const { eventId } = req.body;
+            const { eid } = req.params;
+            const { quantity = 1 } = req.body;
             const userId = req.user._id; // Inyectado por Passport ('current')
 
-            const newRegistration = await this.registrationService.registerUserToEvent(eventId, userId);
+            const newRegistration = await this.registrationService.registerUserToEvent(eid, userId, quantity);
 
             res.status(201).json({
                 status: "success",
-                message: "Inscripción realizada con éxito",
+                message: "Inscripción realizada con éxito. Correo de confirmación enviado.",
                 payload: newRegistration
             });
         } catch (error) {
@@ -21,7 +22,7 @@ export class RegistrationsController {
         }
     }
 
-    // Ver las inscripciones del usuario autenticado
+    // 2. Ver las inscripciones del usuario autenticado (GET /api/registrations/my-registrations)
     getUserRegistrations = async (req, res, next) => {
         try {
             const userId = req.user._id;
@@ -36,17 +37,35 @@ export class RegistrationsController {
         }
     }
 
-    // Cancelar una inscripción
-    cancelRegistration = async (req, res, next) => {
+    // 3. Ver las inscripciones de un evento específico (GET /api/events/:eid/registrations - Organizer/Admin)
+    getEventRegistrations = async (req, res, next) => {
         try {
-            const { id } = req.params;
-            const userId = req.user._id;
+            const { eid } = req.params;
+            const sessionUser = req.user;
 
-            await this.registrationService.cancelRegistration(id, userId);
+            const registrations = await this.registrationService.getEventRegistrationsForOrganizer(eid, sessionUser);
 
             res.status(200).json({
                 status: "success",
-                message: "Inscripción cancelada correctamente"
+                payload: registrations
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // 4. Cancelación lógica de una inscripción (PATCH /api/registrations/:tid/cancel)
+    cancelRegistration = async (req, res, next) => {
+        try {
+            const { tid } = req.params;
+            const sessionUser = req.user;
+
+            const updatedRegistration = await this.registrationService.cancelRegistration(tid, sessionUser);
+
+            res.status(200).json({
+                status: "success",
+                message: "Inscripción cancelada correctamente. Cupo liberado.",
+                payload: updatedRegistration
             });
         } catch (error) {
             next(error);
