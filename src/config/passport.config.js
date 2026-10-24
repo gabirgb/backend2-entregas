@@ -50,8 +50,7 @@ export const inicializarPassport = (req) => {
         },
         async (username, password, done) => {
             try {
-                //TODO: eliminar toLowerCase que ya lo impmemento en el DAO (creo)
-                const user = await usersDAO.getByEmail(username.toLowerCase());
+                const user = await usersService.getUsersByEmail(username.toLowerCase());
 
                 if (!user) {
                     return done(null, false, { message: "Credenciales inválidas." });

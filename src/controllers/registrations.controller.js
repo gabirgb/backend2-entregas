@@ -1,3 +1,5 @@
+import { RegistrationDTO } from "../dto/registrations.dto.js";
+
 export class RegistrationsController {
     constructor(registrationService) {
         this.registrationService = registrationService;
@@ -15,7 +17,7 @@ export class RegistrationsController {
             res.status(201).json({
                 status: "success",
                 message: "Inscripción realizada con éxito. Correo de confirmación enviado.",
-                payload: newRegistration
+                payload: new RegistrationDTO(newRegistration)
             });
         } catch (error) {
             next(error);
@@ -28,9 +30,12 @@ export class RegistrationsController {
             const userId = req.user._id;
             const registrations = await this.registrationService.getUserRegistrations(userId);
 
+            // Mapeamos el array con el DTO (limpia populate de eventos/usuarios por seguridad)
+            const registrationsDTO = registrations.map(reg => new RegistrationDTO(reg));
+
             res.status(200).json({
                 status: "success",
-                payload: registrations
+                payload: registrationsDTO
             });
         } catch (error) {
             next(error);
@@ -45,9 +50,12 @@ export class RegistrationsController {
 
             const registrations = await this.registrationService.getEventRegistrationsForOrganizer(eid, sessionUser);
 
+            // Mapeamos asegurando que si hace populate del usuario, la contraseña quede fuera
+            const registrationsDTO = registrations.map(reg => new RegistrationDTO(reg));
+
             res.status(200).json({
                 status: "success",
-                payload: registrations
+                payload: registrationsDTO
             });
         } catch (error) {
             next(error);
@@ -65,7 +73,7 @@ export class RegistrationsController {
             res.status(200).json({
                 status: "success",
                 message: "Inscripción cancelada correctamente. Cupo liberado.",
-                payload: updatedRegistration
+                payload: new RegistrationDTO(updatedRegistration)
             });
         } catch (error) {
             next(error);

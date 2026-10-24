@@ -1,8 +1,7 @@
 import { Router } from "express";
-import { eventsController, eventsService } from "../controllers/index.js";
+import { eventsController } from "../controllers/index.js";
 import { passportCall } from "../middlewares/passportCall.js";
 import { authorization } from "../middlewares/authorization.js";
-import { verifyEventOwner } from "../middlewares/verifyEventOwner.js";
 
 export const router = Router();
 
@@ -18,18 +17,18 @@ router.post(
     eventsController.createEvent
 );
 
-// Modificar evento propio u de cualquiera si es Admin
+// Modificar evento propio o de cualquiera si es Admin
 router.put(
     '/:id',
     passportCall('current'),
     authorization('organizer', 'admin'),
-    verifyEventOwner(eventsService),
     eventsController.updateEvent
 );
 
-router.patch('/:id/status',
+// Cancelar/actualizar estado del evento
+router.patch(
+    '/:id/status',
     passportCall('current'),
     authorization('admin', 'organizer'),
-    verifyEventOwner(eventsService), // Valida que si es organizer, sea dueño del evento
     eventsController.cancelEvent
 );

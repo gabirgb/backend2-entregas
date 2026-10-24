@@ -18,15 +18,16 @@
 <li>Nodemailer</li>
 </ul>
 
-<h5>🏢 Arquitectura</h5>
-<p>La API sigue una arquitectura en capas con separación de responsabilidades:</p>
+<h5>🏢 Arquitectura en Capas (Módulo 8)</h5>
+<p>La API sigue estrictamente una arquitectura en capas formal con separación de responsabilidades e inyección de dependencias:</p>
 <ul>
-  <li><b>Rutas (Routes):</b> Definen los endpoints de la API y mapean las solicitudes hacia los controladores.</li>
-  <li><b>Middlewares:</b> Capa intermedia encargada de la autenticación (<code>passportCall</code>), autorización basada en roles (<code>authorization</code>) y validación de propiedad de recursos (<code>verifyEventOwner</code>).</li>
-  <li><b>Controladores (Controllers):</b> Manejan la interacción HTTP (req/res), gestionan la autenticación con Passport y devuelven las respuestas JSON.</li>
-  <li><b>DTOs (Data Transfer Objects):</b> Filtran y formatean los datos expuestos hacia y desde el cliente.</li>
-  <li><b>Servicios (Services / Repositories):</b> Contienen la lógica de negocio pura y la orquestación de datos.</li>
-  <li><b>DAOs y Modelos (Data Access / Models):</b> Gestionan el acceso directo a la base de datos y la definición de esquemas.</li>
+  <li><b>Rutas (Routes):</b> Definen los endpoints de la API, aplican autenticación/roles generales y derivan las peticiones a los controladores.</li>
+  <li><b>Middlewares:</b> Capa de transporte encargada de la autenticación por token (<code>passportCall</code>), la autorización basada en roles (<code>authorization</code>) y la gestión centralizada de errores (<code>errorHandler</code>).</li>
+  <li><b>Controladores (Controllers):</b> Manejan la interacción HTTP (extraen <code>req.body</code>, <code>req.params</code>, <code>req.query</code>), delegan la ejecución a los servicios y devuelven respuestas formateadas mediante DTOs.</li>
+  <li><b>DTOs (Data Transfer Objects):</b> Limpian, sanean y estructuran las respuestas enviadas al cliente (<code>UsersDTO</code>, <code>EventsDTO</code>, <code>RegistrationDTO</code>), garantizando la no filtración de contraseñas u otros datos sensibles.</li>
+  <li><b>Servicios (Services):</b> Encapsulan la lógica de negocio pura, sanitizan inputs, aplican validaciones de dominio y verifican la propiedad de los recursos. Consumen exclusivamente Repositorios.</li>
+  <li><b>Repositorios (Repositories):</b> Abstraen el acceso a datos actuando como puente entre el dominio y la persistencia. Consumen únicamente DAOs.</li>
+  <li><b>DAOs y Modelos (Data Access / Models):</b> Gestionan el acceso directo a la base de datos MongoDB mediante esquemas de Mongoose con operaciones optimizadas (<code>.lean()</code>).</li>
 </ul>
 
 <h5>🌲 Árbol de directorios</h5>
@@ -36,17 +37,17 @@ src/<br />
 ├── server.js<br />
 ├── config/        # Configuración de entorno, Passport, DB y Nodemailer<br />
 ├── constants/     # Enums y constantes globales<br />
-├── controllers/   # Capa de Presentación (Manejo de req/res)<br />
-├── dao/           # Objetos de Acceso a Datos (Persistencia)<br />
-├── dto/           # Transformación de datos para transferencias<br />
-├── helpers/       # Funciones auxiliares genéricas<br />
-├── middlewares/   # Middlewares para validaciones, roles, custom errors, passport, etc.<br />
-├── models/        # Esquemas y modelos (Mongoose / ORM)<br />
+├── controllers/   # Capa de Presentación (req/res e inyección en index.js)<br />
+├── dao/           # Objetos de Acceso a Datos (Persistencia Mongoose)<br />
+├── dto/           # Transformación y filtrado seguro de datos (DTOs)<br />
+├── helpers/       # Funciones auxiliares genéricas y validadores de fechas/usuarios<br />
+├── middlewares/   # Middlewares (passportCall, authorization, errorHandler)<br />
+├── models/        # Esquemas y modelos de Mongoose<br />
 ├── public/        # Archivos estáticos<br />
 ├── repositories/  # Patrón Repositorio (abstracción sobre DAOs)<br />
-├── routes/        # Definición de endpoints y rutas<br />
-├── services/      # Capa de Lógica de Negocio<br />
-└── utils/         # Utilidades generales (logger, BCrypt, mailer services, etc.)<br />
+├── routes/        # Definición de endpoints y ruteadores<br />
+├── services/      # Capa de Lógica de Negocio y Reglas de Dominio<br />
+└── utils/         # Utilidades generales (sanitizer, BCrypt, mailer services, CustomError)<br />
 tests/             # Pruebas y testing<br />
 ├── .env.example<br />
 ├── .gitignore<br />
@@ -143,11 +144,11 @@ tests/             # Pruebas y testing<br />
 </table>
 
 <h5>🚨 Manejo Explícito de Errores</h5>
-<p>La API distingue estrictamente los códigos de respuesta de autorización y validación:</p>
+<p>La API distingue estrictamente los códigos de respuesta de autorización y validación mediante clases hijas de <code>CustomError</code>:</p>
 <ul>
   <li><b>HTTP 400 Bad Request:</b> Errores de formato (fechas no ISO, horas con formato inválido), falta de datos obligatorios o violaciones de reglas de negocio (evento sin cupo, intento de editar evento cancelado/finalizado, inscripción duplicada activa).</li>
   <li><b>HTTP 401 Unauthorized:</b> No hay una sesión activa o válida (falta el token JWT en la cookie, expiró o credenciales erróneas).</li>
-  <li><b>HTTP 403 Forbidden:</b> Existe sesión pero el usuario no posee el rol o la propiedad sobre el recurso (ej. un <code>organizer</code> intentando editar un evento ajeno o ver inscripciones sin ser dueño).</li>
+  <li><b>HTTP 403 Forbidden:</b> Existe sesión pero el usuario no posee el rol o la propiedad sobre el recurso (ej. un <code>organizer</code> intentando editar un evento ajeno o ver inscripciones sin ser dueño). La validación de propiedad de recursos la realiza internamente el Servicio (<code>EventsServices</code>).</li>
   <li><b>HTTP 404 Not Found:</b> El ID consultado no existe en la base de datos o no coincide con ningún recurso.</li>
 </ul>
 
@@ -162,7 +163,6 @@ tests/             # Pruebas y testing<br />
   </li>
   <li><b>Control de Capacidad e Inscripciones:</b>
     <ul>
-      <li>Índice compuesto único en Mongoose (<code>user</code> + <code>event</code>) que impide duplicar inscripciones activas.</li>
       <li>Se valida el cupo disponible (<code>capacity</code>) restando únicamente las inscripciones con estado activo (las canceladas no ocupan cupo).</li>
       <li>Al actualizar un evento, la capacidad no se puede reducir a un número menor que la cantidad de usuarios inscriptos activos.</li>
     </ul>
@@ -178,9 +178,9 @@ tests/             # Pruebas y testing<br />
       <li>Al registrarse exitosamente a un evento, el sistema genera un código de reserva único (<code>codigoReserva</code>) y envía automáticamente un correo de confirmación al email del usuario utilizando Nodemailer y plantillas HTML.</li>
     </ul>
   </li>
-  <li><b>Propiedad de Recursos:</b>
+  <li><b>Propiedad de Recursos (Ownership en Services):</b>
     <ul>
-      <li>Los eventos guardan de manera transparente el ID del organizador logueado mediante <code>req.user._id</code>. El cliente no puede inyectar este campo.</li>
+      <li>Los eventos guardan de manera transparente el ID del organizador logueado mediante <code>req.user._id</code>. Los métodos del servicio de eventos validan si el usuario que intenta modificar o cancelar es el creador o un <code>admin</code>.</li>
     </ul>
   </li>
 </ol>
@@ -282,12 +282,12 @@ tests/             # Pruebas y testing<br />
 <ul>
   <li><code>POST /api/users/register</code> - Registro público (fuerza rol <code>user</code>).</li>
   <li><code>POST /api/sessions/login</code> - Inicio de sesión. Genera JWT en cookie HTTP-Only.</li>
-  <li><code>GET /api/sessions/current</code> - Retorna DTO del usuario autenticado sin datos sensibles.</li>
+  <li><code>GET /api/sessions/current</code> - Retorna <code>UsersDTO</code> del usuario autenticado sin datos sensibles.</li>
   <li><code>POST /api/sessions/logout</code> - Destruye la cookie de sesión.</li>
-  <li><code>GET /api/users</code> - Exclusivo para <code>admin</code>. Lista todos los usuarios registrados.</li>
+  <li><code>GET /api/users</code> - Exclusivo para <code>admin</code>. Lista todos los usuarios registrados procesados vía DTO.</li>
 </ul>
 
-<h5>👩🏻‍💻 Sobre mi</h5>
+<h5>👩🏻‍💻 Sobre mí</h5>
 <p>- Me llamo Gabriela, soy de Argentina y este proyecto corresponde a una práctica para mi curso de Backend II en Coderhouse.</p>
 <p>- 📫 Podés encontrarme en <b>gabienelmundo@gmail.com</b></p>
 
@@ -318,7 +318,7 @@ Esperado: Error 403 Forbidden </p>
 <img src="./assets/Screenshot 2026-10-22 232221.png" alt="Captura de pantalla de Postman - Reglas de Negocio" width="500" />
 
 <p>Crear un evento exitosamente autenticado como organizer o admin enviando el body correcto con formato de fecha ISO (YYYY-MM-DDTHH:mm:ssZ) y el campo capacity<br />
-Esperado:201 Created (o 200 OK) y guardado del ID del evento creado (event_id_A).</p>
+Esperado: 201 Created y guardado del ID del evento creado.</p>
 <img src="./assets/Screenshot 2026-10-22 233928.png" alt="Captura de pantalla de Postman - Reglas de Negocio" width="500" />
 
 <h2>Consultas y Filtros de Eventos</h2>
@@ -330,7 +330,7 @@ Esperado:201 Created (o 200 OK) y guardado del ID del evento creado (event_id_A)
 
 <h2>Modificación, Permisos y Propiedad de Recursos (Ownership)</h2>
 <p>Loguearse como Organizer B e intentar actualizar o cancelar el evento creado por el Organizer A (PUT /api/events/:id o PATCH /api/events/:id/status) <br />
-Esperado: Error 403 Forbidden por validación de verifyEventOwner.</p>
+Esperado: Error 403 Forbidden por validación de permisos en el servicio.</p>
 <img src="./assets/Screenshot 2026-10-22 235820.png" alt="Captura de pantalla de Postman - Reglas de Negocio" width="500" />
 
 <p>Loguearse como el Organizer A (dueño) y modificar con éxito los datos del evento (ej. ubicación o precio).<br />
@@ -347,15 +347,15 @@ Esperado: 200 OK (demuestra acceso total del administrador).</p>
 Esperado: Error 400 Bad Request (No se puede editar un evento que ya ha finalizado/cancelado).</p>
 <img src="./assets/Screenshot 2026-10-23 002420.png" alt="Captura de pantalla de Postman - Reglas de Negocio" width="500" />
 
-<h3>Registro a eventos e Emails de confirmación usando NodeMailer</h3>
+<h3>Registro a eventos e Emails de confirmación usando Nodemailer</h3>
 
 <h2>Registro al evento</h2>
-<p>Inscripcion a un evento autenticado con rol user.<br />
-Esperado: 200 OK </p>
+<p>Inscripción a un evento autenticado con rol user.<br />
+Esperado: 201 Created </p>
 <img src="./assets/Screenshot 2026-10-23 222509.png" alt="Captura de pantalla de Postman - Registro al evento" width="500" />
 
 <h2>Validación de registro duplicado</h2>
-<p>EL usuario no se puede inscribir más de una vez al mismo evento.<br />
+<p>El usuario no se puede inscribir más de una vez al mismo evento.<br />
 Esperado: Error 400 Bad Request (indicando que el usuario ya se encuentra inscripto y activo en este evento)</p>
 <img src="./assets/Screenshot 2026-10-23 222529.png" alt="Captura de pantalla de Postman - Validación de registro duplicado" width="500" />
 

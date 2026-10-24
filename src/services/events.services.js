@@ -1,11 +1,12 @@
 import { sanitizeInput } from "../utils/sanitizer.js";
 import { validateEventHours, validateEventStartDate, validateDateRange } from "../helpers/dateValidationRules.js";
 import { VALID_EVENT_STATUSES } from "../constants/events.constants.js";
-import { BadRequestError, NotFoundError } from "../utils/CustomError.js";
+import { BadRequestError, NotFoundError, ForbiddenError } from "../utils/CustomError.js";
 
 export class EventsServices {
-    constructor(eventsDAO) {
-        this.eventsDAO = eventsDAO; //el this se refiere al objeto actual.
+    constructor(eventRepository, registrationRepository) {
+        this.eventRepository = eventRepository;
+        this.registrationRepository = registrationRepository; //el this se refiere al objeto actual.
     }
 
     getAllEvents = async (queryParams) => {
@@ -44,7 +45,7 @@ export class EventsServices {
         };
 
         // 4. Llamamos al DAO pasándole los filtros ya validados
-        const result = await this.eventsDAO.getAllEvents(cleanQueryOptions);
+        const result = await this.eventRepository.getAllEvents(cleanQueryOptions);
 
         // 5. Validación de resultados vacíos
         if (!result || !result.docs || result.docs.length === 0) {
@@ -56,7 +57,7 @@ export class EventsServices {
 
 
     getEventById = async (id) => {
-        const event = await this.eventsDAO.getById(id);
+        const event = await this.eventRepository.getById(id);
         if (!event || event.length === 0) {
             throw new NotFoundError(`No se encontró el evento con id ${id}`);
         }
@@ -140,18 +141,23 @@ export class EventsServices {
             organizer: userId // acá guardo el ID del usuario que creó el evento
         };
 
-        return await this.eventsDAO.create(cleanEventData);
+        return await this.eventRepository.create(cleanEventData);
 
     }
 
     // Actualizacion de eventos
     // Actualizacion de eventos
-    updateEvent = async (id, rawUpdateData) => {
+    updateEvent = async (eventId, rawUpdateData, user) => {
 
         // 1. Buscamos el evento actual en la base de datos para comparar su estado y datos previos
-        const existingEvent = await this.eventsDAO.getById(id);
+        const existingEvent = await this.eventRepository.getById(eventId);
         if (!existingEvent) {
-            throw new NotFoundError(`No se encontró el evento con id ${id}`);
+            throw new NotFoundError(`No se encontró el evento con id ${eventId}`);
+        }
+
+        // Validación de permisos de dueño o admin
+        if (user.role !== 'admin' && existingEvent.organizer.toString() !== user._id.toString()) {
+            throw new ForbiddenError("No tienes permisos para modificar este evento.");
         }
 
         // Regla: No se puede editar un evento si ya está finalizado o cancelado
@@ -213,7 +219,7 @@ export class EventsServices {
             }
 
             // Consultamos cuántos inscriptos reales tiene el evento actualmente
-            const currentRegistrationsCount = await this.registrationDAO.countByEvent(id);
+            const currentRegistrationsCount = await this.registrationRepository.countByEvent(eventId);
 
             // REGLA: No reducir la capacidad por debajo de los ya inscriptos
             if (rawUpdateData.capacity < currentRegistrationsCount) {
@@ -247,20 +253,20 @@ export class EventsServices {
         }
 
         // 5. Ejecutamos la actualización en el DAO
-        const updatedEvent = await this.eventsDAO.update(id, cleanUpdateData);
+        const updatedEvent = await this.eventRepository.update(eventId, cleanUpdateData);
 
         if (!updatedEvent) {
-            throw new NotFoundError(`No se encontró el evento con id ${id} para actualizar`);
+            throw new NotFoundError(`No se encontró el evento con id ${eventId} para actualizar`);
         }
 
         return updatedEvent;
     }
 
-    cancelEvent = async (id, userId, userRole) => {
+    cancelEvent = async (eventId, userId, userRole) => {
         // 1. Buscamos el evento actual en la base de datos
-        const event = await this.eventsDAO.getById(id);
+        const event = await this.eventRepository.getById(eventId);
         if (!event) {
-            throw new NotFoundError(`No se encontró el evento con id ${id}`);
+            throw new NotFoundError(`No se encontró el evento con id ${eventId}`);
         }
 
         // 2. REGLA: Impedir cancelar eventos que ya finalizaron
@@ -278,7 +284,7 @@ export class EventsServices {
         }
 
         // 4. REGLA: Cambiar el estado a 'cancelled' (no se elimina físicamente)
-        const updatedEvent = await this.eventsDAO.update(id, { status: 'cancelled' });
+        const updatedEvent = await this.eventRepository.update(eventId, { status: 'cancelled' });
 
         return updatedEvent;
     }

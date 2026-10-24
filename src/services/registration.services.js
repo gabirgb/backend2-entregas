@@ -1,13 +1,13 @@
 import crypto from 'crypto';
-import { BadRequestError, NotFoundError, ForbiddenError, EmailError } from "../utils/CustomError.js";
+import { BadRequestError, NotFoundError, ForbiddenError } from "../utils/CustomError.js";
 import { sendTicketConfirmationEmail } from '../utils/mailer.services.js';
 import { REGISTRATION_STATUS } from '../constants/registration.constants.js';
 
 export class RegistrationServices {
-    constructor(registrationDAO, eventsDAO, usersDAO) {
-        this.registrationDAO = registrationDAO;
-        this.eventsDAO = eventsDAO;
-        this.usersDAO = usersDAO;
+    constructor(registrationRepository, eventRepository, userRepository) {
+        this.registrationRepository = registrationRepository;
+        this.eventRepository = eventRepository;
+        this.userRepository = userRepository;
     }
 
     // 1. Inscribir usuario a un evento
@@ -19,7 +19,7 @@ export class RegistrationServices {
         }
 
         // Verificar que el evento exista
-        const event = await this.eventsDAO.getById(eventId);
+        const event = await this.eventRepository.getById(eventId);
         if (!event) {
             throw new NotFoundError(`No se encontró el evento con id ${eventId}`);
         }
@@ -35,13 +35,13 @@ export class RegistrationServices {
         }
 
         // Verificar que el usuario no tenga ya un ticket/inscripción activa para este evento
-        const existingRegistration = await this.registrationDAO.getActiveByUserAndEvent(userId, eventId);
+        const existingRegistration = await this.registrationRepository.getActiveByUserAndEvent(userId, eventId);
         if (existingRegistration) {
             throw new BadRequestError('El usuario ya se encuentra inscripto y activo en este evento.');
         }
 
         // Validar el cupo disponible (descontando tickets activos)
-        const currentOccupied = await this.registrationDAO.getActiveQuantityByEvent(eventId);
+        const currentOccupied = await this.registrationRepository.getActiveQuantityByEvent(eventId);
         const availableCapacity = event.capacity - currentOccupied;
 
         if (parsedQuantity > availableCapacity) {
@@ -52,7 +52,7 @@ export class RegistrationServices {
         const codigoReserva = `RES-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
         // Crear la inscripción
-        const newRegistration = await this.registrationDAO.create({
+        const newRegistration = await this.registrationRepository.create({
             user: userId,
             event: eventId,
             quantity: parsedQuantity,
@@ -61,7 +61,7 @@ export class RegistrationServices {
         });
 
         // Obtener datos del usuario para enviar el correo con Nodemailer
-        const user = await this.usersDAO.getById(userId);
+        const user = await this.userRepository.getById(userId);
         if (user && user.email) {
             await sendTicketConfirmationEmail({
                 to: user.email,
@@ -76,12 +76,12 @@ export class RegistrationServices {
 
     // 2. Obtener inscripciones del usuario logueado
     getUserRegistrations = async (userId) => {
-        return await this.registrationDAO.getByUser(userId);
+        return await this.registrationRepository.getByUser(userId);
     }
 
     // 3. Obtener inscripciones de un evento (para organizador dueño o admin)
     getEventRegistrationsForOrganizer = async (eventId, sessionUser) => {
-        const event = await this.eventsDAO.getById(eventId);
+        const event = await this.eventRepository.getById(eventId);
         if (!event) {
             throw new NotFoundError("Evento no encontrado.");
         }
@@ -91,12 +91,12 @@ export class RegistrationServices {
             throw new ForbiddenError("No tienes permisos para ver las inscripciones de este evento.");
         }
 
-        return await this.registrationDAO.getByEvent(eventId);
+        return await this.registrationRepository.getByEvent(eventId);
     }
 
     // 4. Cancelación lógica de una inscripción (libera cupo automáticamente)
     cancelRegistration = async (registrationId, sessionUser) => {
-        const registration = await this.registrationDAO.getById(registrationId);
+        const registration = await this.registrationRepository.getById(registrationId);
         if (!registration) {
             throw new NotFoundError('No se encontró la inscripción.');
         }
@@ -111,7 +111,7 @@ export class RegistrationServices {
         }
 
         // Cancelación lógica: actualiza estado a 'cancelled' y guarda fecha
-        const updatedRegistration = await this.registrationDAO.updateStatus(
+        const updatedRegistration = await this.registrationRepository.updateStatus(
             registrationId,
             REGISTRATION_STATUS.CANCELLED,
             new Date()

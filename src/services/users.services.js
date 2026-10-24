@@ -7,12 +7,12 @@ import { BadRequestError, ConflictError, NotFoundError } from "../utils/CustomEr
 
 // creo la clase
 export class UsersServices {
-    constructor(usersDAO) {
-        this.usersDAO = usersDAO; //el this se refiere al objeto actual.
+    constructor(userRepository) {
+        this.userRepository = userRepository; //el this se refiere al objeto actual.
     }
 
     getAllUsers = async (queryParams) => {
-        const users = await this.usersDAO.getAllUsers(queryParams);
+        const users = await this.userRepository.getAllUsers(queryParams);
 
         // Si no hay usuarios
         if (!users || users.length === 0) {
@@ -23,7 +23,7 @@ export class UsersServices {
     }
 
     getUsersById = async (id) => {
-        const user = await this.usersDAO.getById(id);
+        const user = await this.userRepository.getById(id);
 
         // Si no hay usuarios
         if (!user) {
@@ -34,7 +34,7 @@ export class UsersServices {
     }
 
     getUsersByEmail = async (email) => {
-        const user = await this.usersDAO.getByEmail(email);
+        const user = await this.userRepository.getByEmail(email);
 
         if (!user) {
             throw new NotFoundError(`No se encontró al usuario con email ${email}`);
@@ -54,7 +54,7 @@ export class UsersServices {
         }
 
         // 3. Verificamos si el email ya existe en la base de datos (Regla de negocio adicional)
-        const existingUser = await this.usersDAO.getByEmail(rawUserData.email);
+        const existingUser = await this.userRepository.getByEmail(rawUserData.email);
         if (existingUser) {
             throw new ConflictError('El email ya se encuentra registrado.');
         }
@@ -74,7 +74,7 @@ export class UsersServices {
         }
 
         // 6. Si todo está ok, procedemos a crear el usuario en el DAO con la data ya validada y sanitizada
-        const newUser = await this.usersDAO.create(cleanUserData);
+        const newUser = await this.userRepository.create(cleanUserData);
 
         // 7. Retorno formateado mediante DTO
         return new UsersDTO(newUser);

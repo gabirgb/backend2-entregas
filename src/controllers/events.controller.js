@@ -1,4 +1,5 @@
 import { UsersDTO } from "../dto/users.dto.js";
+import { EventsDTO } from "../dto/events.dto.js";
 
 export class EventsController {
     constructor(eventsService) {
@@ -10,11 +11,14 @@ export class EventsController {
             // pido los eventos al DAO pasándole los query params de la URL
             const result = await this.eventsService.getAllEvents(req.query);
 
+            // Mapeamos los documentos de la página actual con el DTO de eventos
+            const eventsDTO = result.docs.map(event => new EventsDTO(event));
+
             // si hay eventos devuelvo la rta exitosa
             res.setHeader('Content-type', 'application/json');
             res.status(200).json({
                 status: 'success',
-                payload: result.docs, // Los eventos de la página actual
+                payload: eventsDTO, // uso el array mapeado
                 pagination: { // Los metadatos de paginación
                     totalDocs: result.totalDocs,
                     limit: result.limit,
@@ -41,7 +45,7 @@ export class EventsController {
             res.status(200).json({
                 status: 'success',
                 usuarioConsulta: userAuth ? userAuth.nombre : 'Invitado', // <-- Evaluamos si existe
-                payload: event
+                payload: new EventsDTO(event)
             });
 
         } catch (error) {
@@ -63,7 +67,7 @@ export class EventsController {
                 status: 'success',
                 message: 'Evento creado exitosamente',
                 usuarioConsulta: userAuth.nombre,
-                payload: newEvent
+                payload: new EventsDTO(newEvent)
             });
 
         } catch (error) {
@@ -76,13 +80,16 @@ export class EventsController {
     updateEvent = async (req, res, next) => {
         try {
             const { id } = req.params;
-            const updatedEvent = await this.eventsService.updateEvent(id, req.body);
+            const updateData = req.body;
+            const user = req.user; // Obtenido gracias a passportCall('current')
+
+            const updatedEvent = await this.eventsService.updateEvent(id, updateData, user);
 
             res.setHeader('Content-type', 'application/json');
             return res.status(200).json({
                 status: 'success',
                 message: 'Evento actualizado exitosamente',
-                payload: updatedEvent
+                payload: new EventsDTO(updatedEvent)
             });
         } catch (error) {
             next(error);
@@ -100,7 +107,7 @@ export class EventsController {
             res.status(200).json({
                 status: 'success',
                 message: 'El evento ha sido cancelado exitosamente.',
-                payload: cancelledEvent
+                payload: new EventsDTO(cancelledEvent)
             });
         } catch (error) {
             next(error);
